@@ -61,4 +61,6 @@ authRouter.post(
 authRouter.get('/google', {}, handleGoogleLogin);
 authRouter.get('/google/callback', {}, handleGoogleCallback);
 
+// Metamask Here
+
 export default authRouter.getRouter();

@@ -14,6 +14,7 @@ model User {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId // Use ObjectId type for MongoDB
   metamaskAddress String          @unique
   nonce           String
+  role            String // Admin, User
   createdAt       DateTime?       @default(now())
   updatedAt       DateTime?       @updatedAt
   votes           UserVoteEvent[]
@@ -37,6 +38,7 @@ model Event {
 model Candidate {
   id       String          @id @default(auto()) @map("_id") @db.ObjectId // Use ObjectId type for MongoDB
   eventId  String          @db.ObjectId // Reference the event's id as ObjectId
+  photo    String
   name     String
   position String
   visi     String

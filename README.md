@@ -8,6 +8,28 @@
 </p>
 <br/>
 
+## Pembagian Tugas
+
+Task that should do the following:
+
+### 1. Rafif
+
+- Login (login.tsx)
+- Register if not exist (register.tsx)
+- User can vote (index.tsx tombol doang)
+
+### 2. Rizka
+
+- Admin and User can see details of active event (index.tsx)
+- Admin can see list of events (events.tsx)
+- User can see history of votes (events.tsx Read-only)
+
+### 3. Rama
+
+- Admin can create event and can edit event (add.tsx & edit.tsx)
+- Admin more detail of events (/events/details.tsx)
+- Admin can delete event (/events/details.tsx)
+
 ## Prerequisites
 
 Before you get started, make sure you have the following installed on your machine:
@@ -24,12 +46,14 @@ Before you get started, make sure you have the following installed on your machi
      ```sh
      docker compose up -d
      ```
+
 2. **Install Dependencies**:
 
    - Use pnpm to install all the necessary dependencies:
      ```sh
      pnpm i
      ```
+
 3. **Configure Environment Variables**:
 
    - Create a `.env` file in the root directory.
