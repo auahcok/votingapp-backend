@@ -8,3 +8,6 @@ export const getEventsSchema = z.object({
   limitParam: z.string().default('10').transform(Number),
   pageParam: z.string().default('1').transform(Number),
 });
+
+export type CreateEventSchemaType = z.infer<typeof createEventSchema>;
+export type GetEventsSchemaType = z.infer<typeof getEventsSchema>;
