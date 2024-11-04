@@ -52,17 +52,14 @@ export const getEvents = async (
   searchString?: string,
   limit: number = 10,
   page: number = 1,
+  isActive?: boolean
 ) => {
   const skip = (page - 1) * limit;
 
-  const where = searchString
-    ? {
-        title: {
-          contains: searchString,
-          mode: 'insensitive',
-        },
-      }
-    : {};
+  const where = {
+    ...(searchString ? { title: { contains: searchString, mode: 'insensitive' } } : {}),
+    ...(isActive !== undefined ? { isActive } : {})
+  };
 
   const [totalRecords, events] = await Promise.all([
     prisma.event.count({ where }),
@@ -71,34 +68,13 @@ export const getEvents = async (
       take: limit,
       skip,
       include: {
-        candidates: false,
+        candidates: isActive === true 
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     }),
   ]);
 
-  return {
-    results: events,
-    totalRecords,
-  };
-};
-
-export const getActiveEvent = async (limit: number = 10, page: number = 1) => {
-  const skip = (page - 1) * limit;
-
-  const events = await prisma.event.findMany({
-    where: { isActive: true },
-    take: limit,
-    skip,
-    include: {
-      candidates: true,  // Menyertakan data kandidat dalam setiap event
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-
-  return events;  // Hanya mengembalikan array events
+  return { results: events, totalRecords };
 };
 
 // Optional: Helper function untuk menutup koneksi Prisma saat aplikasi shutdown

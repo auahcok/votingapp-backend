@@ -6,7 +6,6 @@ import {
   handleUpdateEvent,
   handleDeleteEvent,
   handleGetEvents,
-  handleGetActiveEvent,
 } from './event.controller';
 import { createEventSchema, getEventsSchema } from './event.schema';
 import { eventSchema } from './event.dto';
@@ -23,15 +22,6 @@ eventRouter.get(
     responseModel: eventSchema,
   },
   handleGetEvents,
-);
-
-// Rute untuk mendapatkan daftar event yang aktif
-eventRouter.get('/active',
-  {
-    requestType: { query: getEventsSchema },
-    responseModel: eventSchema,
-  },
-  handleGetActiveEvent,
 );
 
 // Rute untuk membuat event baru

@@ -6,7 +6,6 @@ import {
   updateEvent,
   deleteEvent,
   getEvents,
-  getActiveEvent,
 } from './event.services';
 
 export const handleCreateEvent = async (
@@ -45,18 +44,11 @@ export const handleGetEvents = async (
   req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
   res: Response,
 ) => {
-  const { results, totalRecords } = await getEvents(
-    req.query.searchString,
-    req.query.limitParam,
-    req.query.pageParam,
-  );
+  const { searchString, limitParam, pageParam, isActive } = req.query;
+  const limit = parseInt(limitParam as unknown as string) || 10;
+  const page = parseInt(pageParam as unknown as string) || 1;
+  const activeStatus = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+
+  const { results, totalRecords } = await getEvents(searchString, limit, page, activeStatus);
   return res.json({ results, totalRecords });
-};
-
-export const handleGetActiveEvent = async (req: Request, res: Response) => {
-  const limit = parseInt(req.query.limit as string) || 10;
-  const page = parseInt(req.query.page as string) || 1;
-
-  const events = await getActiveEvent(limit, page);
-  return res.json(events); 
 };
