@@ -1,7 +1,37 @@
-import { PrismaClient, Event } from '@prisma/client';
+import { PrismaClient, Event, UserVoteEvent } from '@prisma/client';
 import { EventType } from './event.dto';
 
 const prisma = new PrismaClient();
+
+import { ObjectId } from 'mongodb';
+
+export const voteForCandidate = async (userAddress: string, eventId: string, candidateId: string): Promise<UserVoteEvent> => {
+  // Pastikan eventId dan candidateId dalam format ObjectId yang benar
+  if (!ObjectId.isValid(eventId) || !ObjectId.isValid(candidateId)) {
+    throw new Error('Invalid eventId or candidateId format');
+  }
+
+  // Konversi eventId dan candidateId menjadi ObjectId
+  const convertedEventId = new ObjectId(eventId);
+  const convertedCandidateId = new ObjectId(candidateId);
+
+  // Lakukan pencarian atau operasi lainnya dengan ObjectId
+  const existingVote = await prisma.userVoteEvent.findFirst({
+    where: { userAddress, eventId: convertedEventId.toString(), candidateId: convertedCandidateId.toString() },
+  });
+
+  if (existingVote) {
+    throw new Error('User has already voted for this candidate in this event');
+  }
+
+  return await prisma.userVoteEvent.create({
+    data: {
+      userAddress,
+      eventId: convertedEventId.toString(),
+      candidateId: convertedCandidateId.toString(),
+    },
+  });
+};
 
 export const createEvent = async (payload: EventType): Promise<Event> => {
   const event = await prisma.event.create({

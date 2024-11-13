@@ -1,4 +1,4 @@
-import { canAccess } from '../../middlewares/can-access.middleware';
+import { Router } from 'express';
 import MagicRouter from '../../openapi/magic-router';
 import {
   handleCreateEvent,
@@ -6,9 +6,11 @@ import {
   handleUpdateEvent,
   handleDeleteEvent,
   handleGetEvents,
+  handleVoteForCandidate
 } from './event.controller';
 import { createEventSchema, getEventsSchema } from './event.schema';
 import { eventSchema } from './event.dto';
+import asyncHandler from 'express-async-handler';
 
 export const EVENT_ROUTER_ROOT = '/events';
 
@@ -28,7 +30,6 @@ eventRouter.get(
 eventRouter.post(
   '/',
   { requestType: { body: createEventSchema } },
-  //   canAccess('roles', ['SUPER_ADMIN']),
   handleCreateEvent,
 );
 
@@ -40,5 +41,8 @@ eventRouter.put('/:id', handleUpdateEvent);
 
 // Rute untuk menghapus event berdasarkan ID
 eventRouter.delete('/:id', handleDeleteEvent);
+
+// Rute untuk voting
+eventRouter.post('/vote',{}, handleVoteForCandidate);
 
 export default eventRouter.getRouter();

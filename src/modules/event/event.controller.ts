@@ -6,6 +6,7 @@ import {
   updateEvent,
   deleteEvent,
   getEvents,
+  voteForCandidate
 } from './event.services';
 
 export const handleCreateEvent = async (
@@ -39,6 +40,18 @@ export const handleDeleteEvent = async (
   await deleteEvent(req.params.id);
   return res.json({ message: 'Event deleted' });
 };
+
+export const handleVoteForCandidate = async (req: Request, res: Response) => {
+  const { userAddress, eventId, candidateId } = req.body;
+  try {
+    const vote = await voteForCandidate(userAddress, eventId, candidateId);
+    return res.json({ message: 'Vote berhasil dicatat', vote });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
+  }
+};
+
+
 
 export const handleGetEvents = async (
   req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
