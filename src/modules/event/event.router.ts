@@ -30,14 +30,15 @@ eventRouter.get(
 eventRouter.post(
   '/',
   { requestType: { body: createEventSchema } },
+  //   canAccess('roles', ['SUPER_ADMIN']),
   handleCreateEvent,
 );
 
 // Rute untuk mendapatkan event berdasarkan ID
-eventRouter.get('/:id', handleGetEventById);
+eventRouter.get('/:id', {}, handleGetEventById);
 
 // Rute untuk memperbarui event berdasarkan ID
-eventRouter.put('/:id', handleUpdateEvent);
+eventRouter.put('/:id', {}, handleUpdateEvent);
 
 // Rute untuk menghapus event berdasarkan ID
 eventRouter.delete('/:id', handleDeleteEvent);

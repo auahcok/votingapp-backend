@@ -12,8 +12,10 @@ generator client {
 // User Management
 model User {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId // Use ObjectId type for MongoDB
-  metamaskAddress String          @unique
-  nonce           String
+  email           String          @unique
+  password        String
+  metamaskAddress String?         @unique
+  nonce           String?
   role            String // Admin, User
   createdAt       DateTime?       @default(now())
   updatedAt       DateTime?       @updatedAt
