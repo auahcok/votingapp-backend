@@ -40,6 +40,7 @@ export const errorResponse = (
   }
 };
 
+// OLD
 export const successResponse = (
   res: ResponseExtended | Response,
   message?: string,
@@ -63,6 +64,29 @@ export const successResponse = (
     logger.error(err);
   }
 };
+// export const successResponse = (
+//   res: ResponseExtended | Response,
+//   message?: string,
+//   payload?: Record<string, any>,
+//   statusCode: StatusCodes = StatusCodes.OK,
+// ): void => {
+//   try {
+//     const response = {
+//       success: true,
+//       message: message,
+//       ...payload, // Spread payload di sini agar struktur tetap sesuai
+//     };
+
+//     if ('jsonValidate' in res) {
+//       res.status(statusCode).jsonValidate(response);
+//     } else {
+//       res.status(statusCode).json(response);
+//     }
+//     return;
+//   } catch (err) {
+//     logger.error(err);
+//   }
+// };
 
 export const generateResetPasswordLink = (token: string) => {
   return `${config.CLIENT_SIDE_URL}/reset-password?token=${token}`;

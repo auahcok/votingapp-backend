@@ -42,12 +42,10 @@ export const handleCreateSuperAdmin = async (
   const password = 'Pa$$w0rd!';
 
   const user = await createUser({
-    email: 'admin@mailinator.com',
+    email: 'admin@mail.com',
     name: 'Super Admin',
-    username: 'super_admin',
     password: password,
     role: 'SUPER_ADMIN',
-    phoneNo: '123456789',
   });
 
   return successResponse(
@@ -58,6 +56,7 @@ export const handleCreateSuperAdmin = async (
   );
 };
 
+// OLD
 export const handleGetUsers = async (
   req: Request<unknown, unknown, unknown, GetUsersSchemaType>,
   res: Response,
@@ -71,3 +70,22 @@ export const handleGetUsers = async (
 
   return successResponse(res, undefined, { results, paginatorInfo });
 };
+// export const handleGetUsers = async (
+//   req: Request<unknown, unknown, unknown, GetUsersSchemaType>,
+//   res: Response,
+// ) => {
+//   const { results, paginatorInfo } = await getUsers(
+//     {
+//       id: req.user.sub,
+//     },
+//     req.query,
+//   );
+
+//   // Mengubah struktur data agar sesuai dengan schema
+//   return successResponse(res, undefined, {
+//     data: {
+//       results,
+//       paginatorInfo,
+//     },
+//   });
+// };
