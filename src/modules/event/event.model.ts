@@ -8,6 +8,7 @@ const CandidateSchema: Schema = new Schema({
     ref: 'Event',
     required: true,
   }, // Relasi ke Event
+  photo: { type: String, required: true },
   name: { type: String, required: true },
   position: { type: String, required: true },
   sequence: { type: Number, required: true }, // Menggunakan Number sesuai contoh
@@ -21,9 +22,9 @@ const EventSchema: Schema<EventType> = new Schema(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
-    isActive: { type: Boolean, default: true },
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
+    isActive: { type: Boolean, required: true },
+    startDate: { type: String, required: true }, // Date
+    endDate: { type: String, required: true }, // Date
     candidates: [CandidateSchema], // Menggunakan CandidateSchema sebagai subdocument
   },
   { timestamps: true },

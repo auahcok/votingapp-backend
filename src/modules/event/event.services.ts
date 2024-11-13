@@ -3,15 +3,34 @@ import { EventType } from './event.dto';
 
 const prisma = new PrismaClient();
 
-// CREATE EVENT with validation
-export const createEvent = async (payload: EventType): Promise<Event> => {
-  if (!payload.title || !payload.date || !payload.description) {
-    throw new Error('Missing required event fields: title, date, and description');
-  }
-  const event = await prisma.event.create({
-    data: payload,
-  });
-  return event;
+// GET EVENTS with pagination and search functionality
+export const getEvents = async (
+  keyword?: string,
+  limit: number = 10,
+  page: number = 1,
+  isActive?: boolean,
+) => {
+  const skip = (page - 1) * limit;
+
+  const where = {
+    ...(keyword ? { title: { contains: keyword, mode: 'insensitive' } } : {}),
+    ...(isActive !== undefined ? { isActive } : {}),
+  };
+
+  const [totalRecords, events] = await Promise.all([
+    prisma.event.count({ where }),
+    prisma.event.findMany({
+      where,
+      take: limit,
+      skip,
+      include: {
+        candidates: isActive === true,
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ]);
+
+  return { results: events, totalRecords };
 };
 
 // GET EVENT BY ID with validation
@@ -24,6 +43,19 @@ export const getEventById = async (eventId: string): Promise<Event> => {
     },
   });
   if (!event) throw new Error('Event not found');
+  return event;
+};
+
+// CREATE EVENT with validation
+export const createEvent = async (payload: EventType): Promise<Event> => {
+  if (!payload.title || !payload.date || !payload.description) {
+    throw new Error(
+      'Missing required event fields: title, date, and description',
+    );
+  }
+  const event = await prisma.event.create({
+    data: payload,
+  });
   return event;
 };
 
@@ -62,36 +94,6 @@ export const deleteEvent = async (eventId: string): Promise<void> => {
     }
     throw error;
   }
-};
-
-// GET EVENTS with pagination and search functionality
-export const getEvents = async (
-  searchString?: string,
-  limit: number = 10,
-  page: number = 1,
-  isActive?: boolean
-) => {
-  const skip = (page - 1) * limit;
-
-  const where = {
-    ...(searchString ? { title: { contains: searchString, mode: 'insensitive' } } : {}),
-    ...(isActive !== undefined ? { isActive } : {})
-  };
-
-  const [totalRecords, events] = await Promise.all([
-    prisma.event.count({ where }),
-    prisma.event.findMany({
-      where,
-      take: limit,
-      skip,
-      include: {
-        candidates: isActive === true 
-      },
-      orderBy: { createdAt: 'desc' },
-    }),
-  ]);
-
-  return { results: events, totalRecords };
 };
 
 // Optional: Helper function to disconnect Prisma connection on app shutdown

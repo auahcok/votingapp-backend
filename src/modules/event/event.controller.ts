@@ -8,6 +8,25 @@ import {
   getEvents,
 } from './event.services';
 
+export const handleGetEvents = async (
+  req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
+  res: Response,
+) => {
+  const { keyword, limitParam, pageParam, isActive } = req.query;
+  const limit = parseInt(limitParam as unknown as string) || 10;
+  const page = parseInt(pageParam as unknown as string) || 1;
+  const activeStatus =
+    isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+
+  const { results, totalRecords } = await getEvents(
+    keyword,
+    limit,
+    page,
+    activeStatus,
+  );
+  return res.json({ results, totalRecords });
+};
+
 export const handleCreateEvent = async (
   req: Request<unknown, unknown, CreateEventSchemaType>,
   res: Response,
@@ -38,17 +57,4 @@ export const handleDeleteEvent = async (
 ) => {
   await deleteEvent(req.params.id);
   return res.json({ message: 'Event deleted' });
-};
-
-export const handleGetEvents = async (
-  req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
-  res: Response,
-) => {
-  const { searchString, limitParam, pageParam, isActive } = req.query;
-  const limit = parseInt(limitParam as unknown as string) || 10;
-  const page = parseInt(pageParam as unknown as string) || 1;
-  const activeStatus = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
-
-  const { results, totalRecords } = await getEvents(searchString, limit, page, activeStatus);
-  return res.json({ results, totalRecords });
 };
