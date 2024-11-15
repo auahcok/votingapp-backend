@@ -5,7 +5,7 @@ import {
   handleCreateUser,
   handleGetUsers,
 } from './user.controller';
-import { usersPaginatedSchema } from './user.dto';
+// import { usersPaginatedSchema } from './user.dto';
 import { createUserSchema, getUsersSchema } from './user.schema';
 
 export const USER_ROUTER_ROOT = '/users';
@@ -16,7 +16,7 @@ userRouter.get(
   '/',
   {
     requestType: { query: getUsersSchema },
-    responseModel: usersPaginatedSchema,
+    // responseModel: usersPaginatedSchema,
   },
   canAccess(),
   handleGetUsers,

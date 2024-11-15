@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { MongoIdSchemaType } from '../../common/common.schema';
-import { successResponse } from '../../utils/api.utils';
+import { errorResponse, successResponse } from '../../utils/api.utils';
 import { generateRandomPassword } from '../../utils/auth.utils';
 import { CreateUserSchemaType, GetUsersSchemaType } from './user.schema';
 import { createUser, deleteUser, getUsers } from './user.services';
@@ -57,35 +57,25 @@ export const handleCreateSuperAdmin = async (
 };
 
 // OLD
+// user.controller.ts
 export const handleGetUsers = async (
   req: Request<unknown, unknown, unknown, GetUsersSchemaType>,
   res: Response,
 ) => {
-  const { results, paginatorInfo } = await getUsers(
-    {
-      id: req.user.sub,
-    },
-    req.query,
-  );
+  try {
+    const { results, paginatorInfo } = await getUsers(
+      // {
+      //   id: req.user.sub,
+      // },
+      req.query,
+    );
 
-  return successResponse(res, undefined, { results, paginatorInfo });
+    return successResponse(res, undefined, { results, paginatorInfo });
+  } catch (error) {
+    console.log(error);
+    if (error instanceof Error) {
+      return errorResponse(res, error.message || 'Failed to fetch users', 400);
+    }
+    return errorResponse(res, 'Failed to fetch users', 400);
+  }
 };
-// export const handleGetUsers = async (
-//   req: Request<unknown, unknown, unknown, GetUsersSchemaType>,
-//   res: Response,
-// ) => {
-//   const { results, paginatorInfo } = await getUsers(
-//     {
-//       id: req.user.sub,
-//     },
-//     req.query,
-//   );
-
-//   // Mengubah struktur data agar sesuai dengan schema
-//   return successResponse(res, undefined, {
-//     data: {
-//       results,
-//       paginatorInfo,
-//     },
-//   });
-// };
