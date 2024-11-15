@@ -11,7 +11,6 @@ export const getEventsSchema = z.object({
 });
 
 export const createVoteSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
   candidateId: z.string().min(1, 'Candidate ID is required'),
 });
 
