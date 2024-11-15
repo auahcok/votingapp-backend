@@ -6,16 +6,16 @@ const prisma = new PrismaClient();
 import { ObjectId } from 'mongodb';
 
 export const voteForCandidate = async (userAddress: string, eventId: string, candidateId: string): Promise<UserVoteEvent> => {
-  // Pastikan eventId dan candidateId dalam format ObjectId yang benar
+   
   if (!ObjectId.isValid(eventId) || !ObjectId.isValid(candidateId)) {
     throw new Error('Invalid eventId or candidateId format');
   }
 
-  // Konversi eventId dan candidateId menjadi ObjectId
+ 
   const convertedEventId = new ObjectId(eventId);
   const convertedCandidateId = new ObjectId(candidateId);
 
-  // Lakukan pencarian atau operasi lainnya dengan ObjectId
+  
   const existingVote = await prisma.userVoteEvent.findFirst({
     where: { userAddress, eventId: convertedEventId.toString(), candidateId: convertedCandidateId.toString() },
   });
