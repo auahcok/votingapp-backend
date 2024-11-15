@@ -78,14 +78,15 @@ export const handleDeleteEvent = async (
 };
 
 export const handleVoteForCandidate = async (req: Request, res: Response) => {
-  const { userAddress, eventId, candidateId } = req.body;
+  const { userId, eventId, candidateId } = req.body;  
   try {
-    const vote = await voteForCandidate(userAddress, eventId, candidateId);
-    return res.json({ message: 'Vote berhasil dicatat', vote });
+    const vote = await voteForCandidate(userId, eventId, candidateId);
+    return successResponse(res, 'Vote berhasil dicatat', vote, StatusCodes.OK);
   } catch (error: any) {
-    return res.status(400).json({ error: error.message });
+    return res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
   }
 };
+
 
 
 

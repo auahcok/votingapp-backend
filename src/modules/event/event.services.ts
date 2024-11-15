@@ -6,35 +6,46 @@ import { GetEventsSchemaType } from './event.schema';
 
 const prisma = new PrismaClient();
 
-import { ObjectId } from 'mongodb';
+export const voteForCandidate = async (
+  userId: string,  
+  eventId: string,
+  candidateId: string
+): Promise<UserVoteEvent> => {
+  const { ObjectId } = require('mongodb');
 
-export const voteForCandidate = async (userAddress: string, eventId: string, candidateId: string): Promise<UserVoteEvent> => {
-   
-  if (!ObjectId.isValid(eventId) || !ObjectId.isValid(candidateId)) {
-    throw new Error('Invalid eventId or candidateId format');
+  if (!ObjectId.isValid(eventId) || !ObjectId.isValid(candidateId) || !ObjectId.isValid(userId)) {
+    throw new Error('Invalid eventId, candidateId, or userId format');
   }
 
- 
-  const convertedEventId = new ObjectId(eventId);
-  const convertedCandidateId = new ObjectId(candidateId);
-
-  
+  // Cek apakah user sudah memberikan suara sebelumnya
   const existingVote = await prisma.userVoteEvent.findFirst({
-    where: { userAddress, eventId: convertedEventId.toString(), candidateId: convertedCandidateId.toString() },
+    where: {
+      user: { id: userId },
+      event: { id: eventId },
+      candidate: { id: candidateId },
+    },
   });
 
   if (existingVote) {
     throw new Error('User has already voted for this candidate in this event');
   }
 
+  // Buat vote baru
   return await prisma.userVoteEvent.create({
     data: {
-      userAddress,
-      eventId: convertedEventId.toString(),
-      candidateId: convertedCandidateId.toString(),
+      user: {
+        connect: { id: userId },  
+      },
+      event: {
+        connect: { id: eventId },  
+      },
+      candidate: {
+        connect: { id: candidateId },  
+      },
     },
   });
 };
+
 
 // GET EVENTS with pagination and search functionality
 export const getEvents = async (payload: GetEventsSchemaType) => {
