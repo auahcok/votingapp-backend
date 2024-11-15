@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
-import { CreateEventSchemaType, GetEventsSchemaType } from './event.schema';
+import { CreateEventSchemaType, GetEventsSchemaType, CreateVoteSchemaType } from './event.schema';
 import {
   createEvent,
   getEventById,
   updateEvent,
   deleteEvent,
   getEvents,
+  createVote,
 } from './event.services';
 import { successResponse } from '../../utils/api.utils';
 import { StatusCodes } from 'http-status-codes';
@@ -74,4 +75,14 @@ export const handleDeleteEvent = async (
 
   return successResponse(res, 'Event has been deleted');
   // return res.json({ message: 'Event deleted' });
+};
+
+export const handleCreateVote = async (
+  req: Request<{id: string}, unknown, CreateVoteSchemaType>,
+  res: Response,
+) => {
+  const vote = await createVote(req.params.id, req.body);
+
+  return successResponse(res, 'Vote has been created', vote, StatusCodes.CREATED);
+  // return res.json(vote);
 };

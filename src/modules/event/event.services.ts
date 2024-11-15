@@ -1,5 +1,5 @@
-import { PrismaClient, Event, Prisma } from '@prisma/client';
-import { EventType } from './event.dto';
+import { PrismaClient, Event, Prisma, UserVoteEvent } from '@prisma/client';
+import { EventType, VoteType } from './event.dto';
 import { getPaginator } from '../../utils/getPaginator';
 import { GetEventsSchemaType } from './event.schema';
 
@@ -183,3 +183,31 @@ export const deleteEvent = async (eventId: string): Promise<void> => {
     throw error;
   }
 };
+
+export const createVote = async (
+  eventId: string,
+  payload: VoteType,
+): Promise<UserVoteEvent> => {
+  if (!eventId) throw new Error('Event ID is required');
+  
+    const existingVote = await prisma.userVoteEvent.findFirst({
+      where: {
+        eventId: eventId,
+        userId: payload.userId,
+      },
+    });
+
+    if (existingVote) {
+      throw new Error('You have already voted for this event');
+    }
+
+    const vote = await prisma.userVoteEvent.create({
+      data: {
+        eventId: eventId,
+        candidateId: payload.candidateId,
+        userId: payload.userId,
+      },
+    });
+
+    return vote;
+  }

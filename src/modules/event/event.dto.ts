@@ -28,5 +28,11 @@ export const eventSchema = z.object({
   candidates: z.array(candidateSchema).optional(),
 });
 
-// Tipe event
+// Schema untuk Vote
+export const voteSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  candidateId: z.string().min(1, 'Candidate ID is required'),
+});
+
 export type EventType = z.infer<typeof eventSchema>;
+export type VoteType = z.infer<typeof voteSchema>;
