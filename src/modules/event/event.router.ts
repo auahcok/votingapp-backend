@@ -8,7 +8,11 @@ import {
   handleGetEvents,
   handleCreateVote,
 } from './event.controller';
-import { createEventSchema, getEventsSchema, createVoteSchema } from './event.schema';
+import {
+  createEventSchema,
+  getEventsSchema,
+  createVoteSchema,
+} from './event.schema';
 // import { eventSchema } from './event.dto';
 
 export const EVENT_ROUTER_ROOT = '/events';
@@ -39,7 +43,7 @@ eventRouter.get('/:id', {}, handleGetEventById);
 eventRouter.put('/:id', {}, handleUpdateEvent);
 
 // Rute untuk menghapus event berdasarkan ID
-eventRouter.delete('/:id', handleDeleteEvent);
+eventRouter.delete('/:id', {}, handleDeleteEvent);
 
 // Rute untuk melakukan voting
 eventRouter.post(
@@ -47,7 +51,8 @@ eventRouter.post(
   {
     requestType: { body: createVoteSchema },
   },
-  canAccess(), handleCreateVote,
+  canAccess(),
+  handleCreateVote,
 );
 
 export default eventRouter.getRouter();
