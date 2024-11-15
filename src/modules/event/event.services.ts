@@ -189,26 +189,63 @@ export const createVote = async (
   eventId: string,
   payload: VoteType,
 ): Promise<UserVoteEvent> => {
-  if (!eventId) throw new Error('Event ID is required');
-  
-    const existingVote = await prisma.userVoteEvent.findFirst({
-      where: {
-        eventId: eventId,
-        userId: payload.userId,
-      },
-    });
+  // Periksa apakah payload valid
+  if (
+    !eventId ||
+    !payload.userId ||
+    !payload.candidateId
 
-    if (existingVote) {
-      throw new Error('You have already voted for this event');
-    }
-
-    const vote = await prisma.userVoteEvent.create({
-      data: {
-        eventId: eventId,
-        candidateId: payload.candidateId,
-        userId: payload.userId,
-      },
-    });
-
-    return vote;
+  ) {
+    throw new Error(
+      'Missing required fields for voting: eventId, userId, and candidateId',
+    );
   }
+
+  // Periksa apakah event dengan ID tersebut ada
+  const existingEvent = await prisma.event.findUnique({
+    where: { 
+      id: eventId
+    },
+  });
+
+  if (!existingEvent) throw new Error('Event not found');
+
+  // Periksa apakah user dengan ID tersebut ada
+  const existingUser = await prisma.user.findUnique({
+    where: { 
+      id: payload.userId
+    },
+  });
+
+  if (!existingUser) throw new Error('User not found');
+
+  // Periksa apakah candidate dengan ID tersebut ada
+  const existingCandidate = await prisma.candidate.findUnique({
+    where: { 
+      id: payload.candidateId
+    },
+  });
+  
+  if (!existingCandidate) throw new Error('Candidate not found');
+
+  const existingVote = await prisma.userVoteEvent.findFirst({
+    where: {
+      eventId: eventId,
+      userId: payload.userId,
+    },
+  });
+
+  if (existingVote) {
+    throw new Error('You have already voted for this event');
+  }
+
+  const vote = await prisma.userVoteEvent.create({
+    data: {
+      eventId: eventId,
+      candidateId: payload.candidateId,
+      userId: payload.userId,
+    },
+  });
+
+  return vote; 
+}
