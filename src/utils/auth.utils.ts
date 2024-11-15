@@ -21,8 +21,8 @@ export interface GoogleTokensRequestParams {
 export type JwtPayload = {
   sub: string;
   email?: string | null;
-  phoneNo?: string | null;
-  username: string;
+  // phoneNo?: string | null;
+  // username: string;
   role: RoleType;
 };
 
@@ -93,6 +93,7 @@ export const verifyToken = async <
 export const generateRandomPassword = (length: number = 16): string => {
   return crypto.randomBytes(length).toString('hex');
 };
+
 export const fetchGoogleTokens = async (
   params: GoogleTokensRequestParams,
 ): Promise<GoogleTokenResponse> => {
@@ -116,6 +117,7 @@ export const fetchGoogleTokens = async (
   const data: GoogleTokenResponse = await response.json();
   return data;
 };
+
 export interface GoogleUserInfo {
   id: string; // User's unique Google ID
   email: string; // User's email address

@@ -35,7 +35,7 @@ export const handleForgetPassword = async (
 ) => {
   const user = await forgetPassword(req.body);
 
-  return successResponse(res, 'Code has been sent', { userId: user._id });
+  return successResponse(res, 'Code has been sent', { userId: user.id });
 };
 
 export const handleChangePassword = async (
@@ -78,23 +78,40 @@ export const handleGetCurrentUser = async (req: Request, res: Response) => {
 
   return successResponse(res, undefined, user);
 };
+
 export const handleGoogleLogin = async (_: Request, res: Response) => {
   const googleAuthURL = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&scope=email profile`;
   res.redirect(googleAuthURL);
 };
+
+// OLD
+// export const handleGoogleCallback = async (
+//   req: Request<unknown, unknown, unknown, GoogleCallbackQuery>,
+//   res: Response,
+// ) => {
+//   const user = await googleLogin(req.query);
+//   if (!user) throw new Error('Failed to login');
+//   res.cookie(
+//     AUTH_COOKIE_KEY,
+//     user.socialAccount?.[0]?.accessToken,
+//     COOKIE_CONFIG,
+//   );
+
+//   return successResponse(res, 'Logged in successfully', {
+//     token: user.socialAccount?.[0]?.accessToken,
+//   });
+// };
 export const handleGoogleCallback = async (
   req: Request<unknown, unknown, unknown, GoogleCallbackQuery>,
   res: Response,
 ) => {
   const user = await googleLogin(req.query);
   if (!user) throw new Error('Failed to login');
-  res.cookie(
-    AUTH_COOKIE_KEY,
-    user.socialAccount?.[0]?.accessToken,
-    COOKIE_CONFIG,
-  );
+
+  // Menggunakan googleToken langsung dari user
+  res.cookie(AUTH_COOKIE_KEY, user.googleToken, COOKIE_CONFIG);
 
   return successResponse(res, 'Logged in successfully', {
-    token: user.socialAccount?.[0]?.accessToken,
+    token: user.googleToken,
   });
 };

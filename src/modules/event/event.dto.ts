@@ -2,7 +2,8 @@ import z from 'zod';
 
 // Schema untuk Kandidat
 export const candidateSchema = z.object({
-  eventId: z.string().min(1, 'Event ID is required'),
+  eventId: z.string().min(1, 'Event ID is required').optional(),
+  photo: z.string().min(1, 'Photo is required'),
   name: z.string().min(1, 'Candidate name is required'),
   position: z.string().min(1, 'Position is required'),
   sequence: z
@@ -24,7 +25,7 @@ export const eventSchema = z.object({
   endDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: 'End date must be a valid date',
   }),
-  candidates: z.array(candidateSchema).optional(), // Optional, bisa kosong atau tidak ada kandidat
+  candidates: z.array(candidateSchema).optional(),
 });
 
 // Tipe event

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+// import { Router } from 'express';
 import MagicRouter from '../../openapi/magic-router';
 import {
   handleCreateEvent,
@@ -21,7 +21,6 @@ eventRouter.get(
   '/',
   {
     requestType: { query: getEventsSchema },
-    responseModel: eventSchema,
   },
   handleGetEvents,
 );

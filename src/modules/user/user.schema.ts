@@ -1,17 +1,17 @@
 import * as z from 'zod';
 import { passwordValidationSchema } from '../../common/common.schema';
 import { ROLE_ENUM, RoleType } from '../../enums';
-import { isValidUsername } from '../../utils/isUsername';
+// import { isValidUsername } from '../../utils/isUsername';
 
 export const baseCreateUser = z.object({
   email: z
     .string({ required_error: 'Email is required' })
     .email({ message: 'Email is not valid' }),
   password: passwordValidationSchema('Password'),
-  username: z
-    .string({ required_error: 'Username is required' })
-    .min(1)
-    .refine((value) => isValidUsername(value), 'Username must be valid'),
+  // username: z
+  //   .string({ required_error: 'Username is required' })
+  //   .min(1)
+  //   .refine((value) => isValidUsername(value), 'Username must be valid'),
 });
 
 export const createUserSchema = z

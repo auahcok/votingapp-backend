@@ -9,17 +9,28 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum UserRole {
+  SUPER_ADMIN
+  DEFAULT_USER
+}
+
 // User Management
 model User {
-  id              String          @id @default(auto()) @map("_id") @db.ObjectId // Use ObjectId type for MongoDB
-  email           String          @unique
-  password        String
-  metamaskAddress String?         @unique
-  nonce           String?
-  role            String // Admin, User
-  createdAt       DateTime?       @default(now())
-  updatedAt       DateTime?       @updatedAt
-  votes           UserVoteEvent[]
+  id                String          @id @default(auto()) @map("_id") @db.ObjectId
+  email             String          @unique
+  name              String
+  password          String? // Dibuat optional karena user bisa login dengan Google
+  avatar            String?
+  metamaskAddress   String?         @unique
+  nonce             String?
+  role              UserRole
+  googleId          String?         @unique // ID unik dari Google
+  googleToken       String? // Access token dari Google
+  passwordResetCode String?
+  tokenExpiry       DateTime? // Waktu expired token
+  createdAt         DateTime?       @default(now())
+  updatedAt         DateTime?       @updatedAt
+  votes             UserVoteEvent[]
 }
 
 // Event
@@ -54,10 +65,10 @@ model Candidate {
 // UserVoteEvent
 model UserVoteEvent {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId // Use ObjectId type for MongoDB
-  userAddress String // Reference to user's metamaskAddress
+  userId      String    @db.ObjectId // Reference to user's metamaskAddress
   eventId     String    @db.ObjectId // Reference to event's id
   candidateId String    @db.ObjectId // Reference to candidate's id
-  user        User      @relation(fields: [userAddress], references: [metamaskAddress])
+  user        User      @relation(fields: [userId], references: [id])
   event       Event     @relation(fields: [eventId], references: [id])
   candidate   Candidate @relation(fields: [candidateId], references: [id])
 }

@@ -1,4 +1,4 @@
-import { ROLE_ENUM, RoleType, SOCIAL_ACCOUNT_ENUM } from '../../enums';
+import { RoleType } from '../../enums';
 import { GoogleCallbackQuery } from '../../types';
 import {
   compareHash,
@@ -39,7 +39,6 @@ export const resetPassword = async (payload: ResetPasswordSchemaType) => {
 
   await updateUser(payload.userId, {
     password: hashedPassword,
-    passwordResetCode: null,
   });
 };
 
@@ -54,7 +53,7 @@ export const forgetPassword = async (
 
   const code = generateRandomNumbers(4);
 
-  await updateUser(user._id, { passwordResetCode: code });
+  await updateUser(user.id, { passwordResetCode: code });
 
   return user;
 };
@@ -63,7 +62,7 @@ export const changePassword = async (
   userId: string,
   payload: ChangePasswordSchemaType,
 ): Promise<void> => {
-  const user = await getUserById(userId, '+password');
+  const user = await getUserById(userId, true);
 
   if (!user || !user.password) {
     throw new Error('User is not found');
@@ -102,7 +101,9 @@ export const registerUserByEmail = async (
 export const loginUserByEmail = async (
   payload: LoginUserByEmailSchemaType,
 ): Promise<string> => {
-  const user = await getUserByEmail(payload.email, '+password');
+  const user = await getUserByEmail(payload.email, true);
+
+  console.log(user);
 
   if (!user || !(await compareHash(String(user.password), payload.password))) {
     throw new Error('Invalid email or password');
@@ -112,8 +113,8 @@ export const loginUserByEmail = async (
     sub: String(user.id),
     email: user?.email,
     // phoneNo: user?.phoneNo,
+    // username: user.username,
     role: String(user.role) as RoleType,
-    username: user.username,
   };
 
   const token = await signToken(jwtPayload);
@@ -121,6 +122,7 @@ export const loginUserByEmail = async (
   return token;
 };
 
+// auth.service.ts
 export const googleLogin = async (
   payload: GoogleCallbackQuery,
 ): Promise<UserType> => {
@@ -135,7 +137,7 @@ export const googleLogin = async (
   }
   const tokenResponse = await fetchGoogleTokens({ code });
 
-  const { access_token, refresh_token, expires_in } = tokenResponse;
+  const { access_token, expires_in } = tokenResponse;
 
   const userInfoResponse = await getUserInfo(access_token);
 
@@ -146,34 +148,21 @@ export const googleLogin = async (
   if (!user) {
     const newUser = await createUser({
       email,
-      username: name,
+      name,
       avatar: picture,
-      role: ROLE_ENUM.DEFAULT_USER,
+      role: 'DEFAULT_USER',
+      googleId: id,
+      googleToken: access_token,
+      tokenExpiry: new Date(Date.now() + expires_in * 1000),
       password: generateRandomNumbers(4),
-      socialAccount: [
-        {
-          refreshToken: refresh_token,
-          tokenExpiry: new Date(Date.now() + expires_in * 1000),
-          accountType: SOCIAL_ACCOUNT_ENUM.GOOGLE,
-          accessToken: access_token,
-          accountID: id,
-        },
-      ],
     });
 
     return newUser;
   }
 
-  const updatedUser = await updateUser(user._id, {
-    socialAccount: [
-      {
-        refreshToken: refresh_token,
-        tokenExpiry: new Date(Date.now() + expires_in * 1000),
-        accountType: SOCIAL_ACCOUNT_ENUM.GOOGLE,
-        accessToken: access_token,
-        accountID: id,
-      },
-    ],
+  const updatedUser = await updateUser(user.id, {
+    googleToken: access_token,
+    tokenExpiry: new Date(Date.now() + expires_in * 1000),
   });
 
   return updatedUser;

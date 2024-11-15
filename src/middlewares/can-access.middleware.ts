@@ -35,13 +35,13 @@ export const canAccess =
         return errorResponse(res, 'Login again', StatusCodes.UNAUTHORIZED);
       }
 
-      if (currentUser.otp !== null) {
-        return errorResponse(
-          res,
-          'Your account is not verified',
-          StatusCodes.UNAUTHORIZED,
-        );
-      }
+      // if (currentUser.tokenExpiry !== null) {
+      //   return errorResponse(
+      //     res,
+      //     'Your account is not verified',
+      //     StatusCodes.UNAUTHORIZED,
+      //   );
+      // }
 
       let can = false;
 
@@ -80,7 +80,7 @@ export const canAccess =
       }
 
       if (currentUser) {
-        req['user'] = { ...currentUser, sub: currentUser._id };
+        req['user'] = { ...currentUser, sub: currentUser.id };
       }
     } catch (err) {
       return errorResponse(

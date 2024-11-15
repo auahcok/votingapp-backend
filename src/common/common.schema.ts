@@ -1,11 +1,17 @@
 import validator from 'validator';
 import { z } from 'zod';
 
+// OLD
 export const successResponseSchema = z.object({
   success: z.boolean().default(true),
   message: z.string().optional(),
   data: z.record(z.string(), z.any()).optional(),
 });
+// export const successResponseSchema = z.object({
+//   success: z.boolean(),
+//   message: z.string().optional(),
+//   data: z.object({}).optional(), // Base schema untuk data
+// });
 
 export const errorResponseSchema = z.object({
   message: z.string(),
@@ -50,18 +56,18 @@ export const passwordValidationSchema = (fieldName: string) =>
   z
     .string({ required_error: `${fieldName} is required` })
     .min(8)
-    .max(64)
-    .refine(
-      (value) =>
-        validator.isStrongPassword(value, {
-          minLength: 8,
-          minLowercase: 1,
-          minNumbers: 1,
-          minUppercase: 1,
-          minSymbols: 1,
-        }),
-      'Password is too weak',
-    );
+    .max(64);
+// .refine(
+//   (value) =>
+//     validator.isStrongPassword(value, {
+//       minLength: 8,
+//       minLowercase: 1,
+//       minNumbers: 1,
+//       minUppercase: 1,
+//       minSymbols: 1,
+//     }),
+//   'Password is too weak',
+// );
 
 export type MongoIdSchemaType = z.infer<typeof mongoIdSchema>;
 export type IdSchemaType = z.infer<typeof idSchema>;
