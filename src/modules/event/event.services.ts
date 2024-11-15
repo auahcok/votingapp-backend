@@ -1,5 +1,6 @@
 import { PrismaClient, Event, Prisma, UserVoteEvent } from '@prisma/client';
 import { EventType, VoteType } from './event.dto';
+
 import { getPaginator } from '../../utils/getPaginator';
 import { GetEventsSchemaType } from './event.schema';
 

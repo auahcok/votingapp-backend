@@ -28,7 +28,7 @@ eventRouter.get(
 eventRouter.post(
   '/',
   { requestType: { body: createEventSchema } },
-  // canAccess('roles', ['SUPER_ADMIN']),
+  //   canAccess('roles', ['SUPER_ADMIN']),
   handleCreateEvent,
 );
 
@@ -39,7 +39,7 @@ eventRouter.get('/:id', {}, handleGetEventById);
 eventRouter.put('/:id', {}, handleUpdateEvent);
 
 // Rute untuk menghapus event berdasarkan ID
-eventRouter.delete('/:id', {}, handleDeleteEvent);
+eventRouter.delete('/:id', handleDeleteEvent);
 
 // Rute untuk melakukan voting
 eventRouter.post(
