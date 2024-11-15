@@ -10,6 +10,31 @@ import {
 import { successResponse } from '../../utils/api.utils';
 import { StatusCodes } from 'http-status-codes';
 
+export const handleCreateEvent = async (
+  req: Request<unknown, unknown, CreateEventSchemaType>,
+  res: Response,
+) => {
+  const event = await createEvent(req.body);
+
+  return successResponse(
+    res,
+    'Event has been created',
+    event,
+    StatusCodes.CREATED,
+  );
+  // return res.status(201).json({ message: 'Event created', event });
+};
+
+export const handleGetEventById = async (
+  req: Request<{ id: string }>,
+  res: Response,
+) => {
+  const event = await getEventById(req.params.id);
+
+  return successResponse(res, undefined, event);
+  // return res.json(event);
+};
+
 export const handleGetEvents = async (
   req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
   res: Response,
@@ -26,31 +51,6 @@ export const handleGetEvents = async (
   return successResponse(res, undefined, { results, paginatorInfo });
 };
 
-export const handleCreateEvent = async (
-  req: Request<unknown, unknown, CreateEventSchemaType>,
-  res: Response,
-) => {
-  const event = await createEvent(req.body);
-
-  return successResponse(
-    res,
-    'Email has been sent to the user',
-    event,
-    StatusCodes.CREATED,
-  );
-  // return res.status(201).json({ message: 'Event created', event });
-};
-
-export const handleGetEventById = async (
-  req: Request<{ id: string }>,
-  res: Response,
-) => {
-  const event = await getEventById(req.params.id);
-
-  return successResponse(res, undefined, event, StatusCodes.OK);
-  // return res.json(event);
-};
-
 export const handleUpdateEvent = async (
   req: Request<{ id: string }, unknown, Partial<CreateEventSchemaType>>,
   res: Response,
@@ -59,7 +59,7 @@ export const handleUpdateEvent = async (
 
   return successResponse(
     res,
-    'Email has been sent to the user',
+    'Event has been updated',
     event,
     StatusCodes.ACCEPTED,
   );

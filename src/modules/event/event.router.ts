@@ -8,7 +8,7 @@ import {
   handleGetEvents,
 } from './event.controller';
 import { createEventSchema, getEventsSchema } from './event.schema';
-import { eventSchema } from './event.dto';
+// import { eventSchema } from './event.dto';
 
 export const EVENT_ROUTER_ROOT = '/events';
 
@@ -19,7 +19,6 @@ eventRouter.get(
   '/',
   {
     requestType: { query: getEventsSchema },
-    responseModel: eventSchema,
   },
   handleGetEvents,
 );

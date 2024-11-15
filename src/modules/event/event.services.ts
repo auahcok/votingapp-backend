@@ -7,27 +7,25 @@ const prisma = new PrismaClient();
 
 // GET EVENTS with pagination and search functionality
 export const getEvents = async (payload: GetEventsSchemaType) => {
-  // Bangun kondisi `where` untuk filtering
+  // Kondisi untuk filter
   const conditions: Prisma.EventWhereInput = {
     ...(payload.keyword
       ? { title: { contains: payload.keyword, mode: 'insensitive' } }
       : {}),
-    ...(payload.isActive !== undefined && payload.isActive
-      ? { isActive: true }
-      : {}),
+    ...(payload.isActive !== undefined ? { isActive: payload.isActive } : {}),
   };
 
-  // Hitung total records berdasarkan kondisi yang ada
+  // Hitung total records
   const totalRecords = await prisma.event.count({ where: conditions });
 
-  // Buat informasi pagination berdasarkan total records
+  // Paginator
   const paginatorInfo = getPaginator(
     payload.limitParam,
     payload.pageParam,
     totalRecords,
   );
 
-  // Ambil data event dengan kondisi yang telah dibangun
+  // Ambil data events dengan semua field yang diperlukan
   const events = await prisma.event.findMany({
     where: conditions,
     take: paginatorInfo.limit,
@@ -35,6 +33,7 @@ export const getEvents = async (payload: GetEventsSchemaType) => {
     orderBy: { createdAt: 'desc' },
   });
 
+  // Pastikan data response sesuai dengan validasi
   return {
     results: events || [],
     paginatorInfo: paginatorInfo || {},
