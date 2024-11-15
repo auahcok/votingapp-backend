@@ -21,10 +21,10 @@ model User {
   name              String
   password          String? // Dibuat optional karena user bisa login dengan Google
   avatar            String?
-  metamaskAddress   String?
+  metamaskAddress   String?         @unique
   nonce             String?
   role              UserRole
-  googleId          String? // ID unik dari Google
+  googleId          String?         @unique // ID unik dari Google
   googleToken       String? // Access token dari Google
   passwordResetCode String?
   tokenExpiry       DateTime? // Waktu expired token
