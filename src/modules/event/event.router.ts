@@ -6,11 +6,10 @@ import {
   handleUpdateEvent,
   handleDeleteEvent,
   handleGetEvents,
-  handleVoteForCandidate
+  handleCreateVote,
 } from './event.controller';
-import { createEventSchema, getEventsSchema } from './event.schema';
-import { eventSchema } from './event.dto';
-import asyncHandler from 'express-async-handler';
+import { createEventSchema, getEventsSchema, createVoteSchema } from './event.schema';
+// import { eventSchema } from './event.dto';
 
 export const EVENT_ROUTER_ROOT = '/events';
 
@@ -42,7 +41,13 @@ eventRouter.put('/:id', {}, handleUpdateEvent);
 // Rute untuk menghapus event berdasarkan ID
 eventRouter.delete('/:id', handleDeleteEvent);
 
-// Rute untuk vote
-eventRouter.post('/vote',{}, handleVoteForCandidate);
+// Rute untuk melakukan voting
+eventRouter.post(
+  '/:id/vote',
+  {
+    requestType: { body: createVoteSchema },
+  },
+  canAccess(), handleCreateVote,
+);
 
 export default eventRouter.getRouter();

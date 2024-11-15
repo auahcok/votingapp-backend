@@ -10,5 +10,11 @@ export const getEventsSchema = z.object({
   isActive: z.string().optional(),
 });
 
+export const createVoteSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  candidateId: z.string().min(1, 'Candidate ID is required'),
+});
+
 export type CreateEventSchemaType = z.infer<typeof createEventSchema>;
 export type GetEventsSchemaType = z.infer<typeof getEventsSchema>;
+export type CreateVoteSchemaType = z.infer<typeof createVoteSchema>;
