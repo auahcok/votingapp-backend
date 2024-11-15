@@ -20,7 +20,6 @@ import { useSocketIo } from './lib/realtime.server';
 import redisStore from './lib/session.store';
 import { extractJwt } from './middlewares/extract-jwt-schema.middleware';
 import apiRoutes from './routes/routes';
-import eventRouter from './modules/event/event.router';
 import swaggerUi from 'swagger-ui-express';
 
 import YAML from 'yaml';
@@ -84,9 +83,7 @@ const boostrapServer = async () => {
   }
 
   app.use('/api', apiRoutes);
-  app.use('/events', eventRouter);
-
-
+  
   const swaggerDocument = YAML.parse(convertDocumentationToYaml());
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
