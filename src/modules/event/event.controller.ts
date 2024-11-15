@@ -6,6 +6,7 @@ import {
   updateEvent,
   deleteEvent,
   getEvents,
+  voteForCandidate
 } from './event.services';
 import { successResponse } from '../../utils/api.utils';
 import { StatusCodes } from 'http-status-codes';
@@ -75,3 +76,29 @@ export const handleDeleteEvent = async (
   return successResponse(res, 'Event has been deleted');
   // return res.json({ message: 'Event deleted' });
 };
+
+export const handleVoteForCandidate = async (req: Request, res: Response) => {
+  const { userId, eventId, candidateId } = req.body;  
+  try {
+    const vote = await voteForCandidate(userId, eventId, candidateId);
+    return successResponse(res, 'Vote berhasil dicatat', vote, StatusCodes.OK);
+  } catch (error: any) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+  }
+};
+
+
+//
+
+// export const handleGetEvents = async (
+//   req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
+//   res: Response,
+// ) => {
+//   const { searchString, limitParam, pageParam, isActive } = req.query;
+//   const limit = parseInt(limitParam as unknown as string) || 10;
+//   const page = parseInt(pageParam as unknown as string) || 1;
+//   const activeStatus = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+
+//   const { results, totalRecords } = await getEvents(searchString, limit, page, activeStatus);
+//   return res.json({ results, totalRecords });
+// };

@@ -1,9 +1,51 @@
-import { PrismaClient, Event, Prisma } from '@prisma/client';
+
+import { PrismaClient, Event, UserVoteEvent } from '@prisma/client';
 import { EventType } from './event.dto';
 import { getPaginator } from '../../utils/getPaginator';
 import { GetEventsSchemaType } from './event.schema';
 
 const prisma = new PrismaClient();
+
+export const voteForCandidate = async (
+  userId: string,  
+  eventId: string,
+  candidateId: string
+): Promise<UserVoteEvent> => {
+  const { ObjectId } = require('mongodb');
+
+  if (!ObjectId.isValid(eventId) || !ObjectId.isValid(candidateId) || !ObjectId.isValid(userId)) {
+    throw new Error('Invalid eventId, candidateId, or userId format');
+  }
+
+  // Cek apakah user sudah memberikan suara sebelumnyaa
+  const existingVote = await prisma.userVoteEvent.findFirst({
+    where: {
+      user: { id: userId },
+      event: { id: eventId },
+      candidate: { id: candidateId },
+    },
+  });
+
+  if (existingVote) {
+    throw new Error('User has already voted for this candidate in this event');
+  }
+
+  // Buat vote baru
+  return await prisma.userVoteEvent.create({
+    data: {
+      user: {
+        connect: { id: userId },  
+      },
+      event: {
+        connect: { id: eventId },  
+      },
+      candidate: {
+        connect: { id: candidateId },  
+      },
+    },
+  });
+};
+
 
 // GET EVENTS with pagination and search functionality
 export const getEvents = async (payload: GetEventsSchemaType) => {
