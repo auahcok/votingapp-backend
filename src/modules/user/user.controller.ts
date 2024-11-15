@@ -39,7 +39,7 @@ export const handleCreateSuperAdmin = async (
   _: Request<unknown, unknown, unknown>,
   res: Response,
 ) => {
-  const password = 'Pa$$w0rd!';
+  const password = 'admin1234';
 
   const user = await createUser({
     email: 'admin@mail.com',
