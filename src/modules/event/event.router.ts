@@ -42,7 +42,7 @@ eventRouter.put('/:id', {}, handleUpdateEvent);
 // Rute untuk menghapus event berdasarkan ID
 eventRouter.delete('/:id', handleDeleteEvent);
 
-// Rute untuk voting
+// Rute untuk vote
 eventRouter.post('/vote',{}, handleVoteForCandidate);
 
 export default eventRouter.getRouter();

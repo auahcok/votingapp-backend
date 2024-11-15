@@ -88,7 +88,7 @@ export const handleVoteForCandidate = async (req: Request, res: Response) => {
 };
 
 
-
+//
 
 // export const handleGetEvents = async (
 //   req: Request<unknown, unknown, unknown, GetEventsSchemaType>,

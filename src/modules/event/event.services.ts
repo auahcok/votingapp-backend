@@ -17,7 +17,7 @@ export const voteForCandidate = async (
     throw new Error('Invalid eventId, candidateId, or userId format');
   }
 
-  // Cek apakah user sudah memberikan suara sebelumnya
+  // Cek apakah user sudah memberikan suara sebelumnyaa
   const existingVote = await prisma.userVoteEvent.findFirst({
     where: {
       user: { id: userId },
