@@ -12,7 +12,9 @@ export const getEvents = async (payload: GetEventsSchemaType) => {
     ...(payload.keyword
       ? { title: { contains: payload.keyword, mode: 'insensitive' } }
       : {}),
-    ...(payload.isActive !== undefined ? { isActive: payload.isActive } : {}),
+    ...(payload.isActive !== undefined
+      ? { isActive: payload.isActive == 'true' ? true : false }
+      : {}),
   };
 
   // Hitung total records
