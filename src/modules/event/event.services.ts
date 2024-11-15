@@ -1,36 +1,44 @@
-import { PrismaClient, Event } from '@prisma/client';
+import { PrismaClient, Event, Prisma } from '@prisma/client';
 import { EventType } from './event.dto';
+import { getPaginator } from '../../utils/getPaginator';
+import { GetEventsSchemaType } from './event.schema';
 
 const prisma = new PrismaClient();
 
 // GET EVENTS with pagination and search functionality
-export const getEvents = async (
-  keyword?: string,
-  limit: number = 10,
-  page: number = 1,
-  isActive?: boolean,
-) => {
-  const skip = (page - 1) * limit;
-
-  const where = {
-    ...(keyword ? { title: { contains: keyword, mode: 'insensitive' } } : {}),
-    ...(isActive !== undefined ? { isActive } : {}),
+export const getEvents = async (payload: GetEventsSchemaType) => {
+  // Bangun kondisi `where` untuk filtering
+  const conditions: Prisma.EventWhereInput = {
+    ...(payload.keyword
+      ? { title: { contains: payload.keyword, mode: 'insensitive' } }
+      : {}),
+    ...(payload.isActive !== undefined && payload.isActive
+      ? { isActive: true }
+      : {}),
   };
 
-  const [totalRecords, events] = await Promise.all([
-    prisma.event.count({ where }),
-    prisma.event.findMany({
-      where,
-      take: limit,
-      skip,
-      include: {
-        candidates: isActive === true,
-      },
-      orderBy: { createdAt: 'desc' },
-    }),
-  ]);
+  // Hitung total records berdasarkan kondisi yang ada
+  const totalRecords = await prisma.event.count({ where: conditions });
 
-  return { results: events, totalRecords };
+  // Buat informasi pagination berdasarkan total records
+  const paginatorInfo = getPaginator(
+    payload.limitParam,
+    payload.pageParam,
+    totalRecords,
+  );
+
+  // Ambil data event dengan kondisi yang telah dibangun
+  const events = await prisma.event.findMany({
+    where: conditions,
+    take: paginatorInfo.limit,
+    skip: paginatorInfo.skip,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return {
+    results: events || [],
+    paginatorInfo: paginatorInfo || {},
+  };
 };
 
 // GET EVENT BY ID with validation
@@ -42,20 +50,50 @@ export const getEventById = async (eventId: string): Promise<Event> => {
       id: eventId,
     },
   });
+
   if (!event) throw new Error('Event not found');
+
   return event;
 };
 
 // CREATE EVENT with validation
 export const createEvent = async (payload: EventType): Promise<Event> => {
-  if (!payload.title || !payload.date || !payload.description) {
+  if (
+    !payload.title ||
+    !payload.startDate ||
+    !payload.endDate ||
+    !payload.description
+  ) {
     throw new Error(
       'Missing required event fields: title, date, and description',
     );
   }
+
+  if (!payload.candidates || payload.candidates.length === 0) {
+    throw new Error('At least one candidate is required');
+  }
+
   const event = await prisma.event.create({
-    data: payload,
+    data: {
+      title: payload.title,
+      description: payload.description,
+      isActive: payload.isActive ? true : false,
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+    },
   });
+
+  await Promise.all(
+    payload.candidates.map((candidate) =>
+      prisma.candidate.create({
+        data: {
+          ...candidate,
+          eventId: event.id,
+        },
+      }),
+    ),
+  );
+
   return event;
 };
 
@@ -66,16 +104,59 @@ export const updateEvent = async (
 ): Promise<Event> => {
   if (!eventId) throw new Error('Event ID is required');
 
-  const eventExists = await prisma.event.findUnique({ where: { id: eventId } });
-  if (!eventExists) throw new Error('Event not found');
+  // Periksa apakah event dengan ID tersebut ada
+  const existingEvent = await prisma.event.findUnique({
+    where: { id: eventId },
+  });
+  if (!existingEvent) throw new Error('Event not found');
 
-  const event = await prisma.event.update({
+  // Validasi untuk field penting
+  if (
+    payload.title === '' ||
+    payload.startDate === undefined ||
+    payload.endDate === undefined ||
+    payload.description === ''
+  ) {
+    throw new Error(
+      'Missing required fields for update: title, startDate, endDate, and description',
+    );
+  }
+
+  // Perbarui data event
+  const updatedEvent = await prisma.event.update({
     where: {
       id: eventId,
     },
-    data: payload,
+    data: {
+      title: payload.title,
+      description: payload.description,
+      isActive: payload.isActive,
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+    },
   });
-  return event;
+
+  // Update kandidat jika ada dalam payload
+  if (payload.candidates && payload.candidates.length > 0) {
+    // Hapus kandidat yang ada sebelumnya
+    await prisma.candidate.deleteMany({
+      where: { eventId: eventId },
+    });
+
+    // Tambahkan kandidat baru
+    await Promise.all(
+      payload.candidates.map((candidate) =>
+        prisma.candidate.create({
+          data: {
+            ...candidate,
+            eventId: eventId,
+          },
+        }),
+      ),
+    );
+  }
+
+  return updatedEvent;
 };
 
 // DELETE EVENT with validation
@@ -89,14 +170,15 @@ export const deleteEvent = async (eventId: string): Promise<void> => {
       },
     });
   } catch (error) {
-    if (error.code === 'P2025') {
-      throw new Error('Event not found');
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2025'
+    ) {
+      throw new Error('Event not found or has already been deleted');
+    }
+    if (error instanceof Error) {
+      throw new Error(`Failed to delete event: ${error.message}`);
     }
     throw error;
   }
-};
-
-// Optional: Helper function to disconnect Prisma connection on app shutdown
-export const disconnectPrisma = async () => {
-  await prisma.$disconnect();
 };

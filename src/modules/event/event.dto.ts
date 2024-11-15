@@ -3,6 +3,7 @@ import z from 'zod';
 // Schema untuk Kandidat
 export const candidateSchema = z.object({
   eventId: z.string().min(1, 'Event ID is required'),
+  photo: z.string().min(1, 'Photo is required'),
   name: z.string().min(1, 'Candidate name is required'),
   position: z.string().min(1, 'Position is required'),
   sequence: z

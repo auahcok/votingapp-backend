@@ -1,4 +1,4 @@
-import { canAccess } from '../../middlewares/can-access.middleware';
+// import { canAccess } from '../../middlewares/can-access.middleware';
 import MagicRouter from '../../openapi/magic-router';
 import {
   handleCreateEvent,

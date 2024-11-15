@@ -7,24 +7,23 @@ import {
   deleteEvent,
   getEvents,
 } from './event.services';
+import { successResponse } from '../../utils/api.utils';
+import { StatusCodes } from 'http-status-codes';
 
 export const handleGetEvents = async (
   req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
   res: Response,
 ) => {
-  const { keyword, limitParam, pageParam, isActive } = req.query;
-  const limit = parseInt(limitParam as unknown as string) || 10;
-  const page = parseInt(pageParam as unknown as string) || 1;
-  const activeStatus =
-    isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+  // const { keyword, limitParam, pageParam, isActive } = req.query;
+  // const limit = parseInt(limitParam as unknown as string) || 10;
+  // const page = parseInt(pageParam as unknown as string) || 1;
+  // const activeStatus =
+  //   isActive === 'true' ? true : isActive === 'false' ? false : undefined;
 
-  const { results, totalRecords } = await getEvents(
-    keyword,
-    limit,
-    page,
-    activeStatus,
-  );
-  return res.json({ results, totalRecords });
+  const { results, paginatorInfo } = await getEvents(req.query);
+
+  // return res.json({ results, totalRecords });
+  return successResponse(res, undefined, { results, paginatorInfo });
 };
 
 export const handleCreateEvent = async (
@@ -32,7 +31,14 @@ export const handleCreateEvent = async (
   res: Response,
 ) => {
   const event = await createEvent(req.body);
-  return res.status(201).json({ message: 'Event created', event });
+
+  return successResponse(
+    res,
+    'Email has been sent to the user',
+    event,
+    StatusCodes.CREATED,
+  );
+  // return res.status(201).json({ message: 'Event created', event });
 };
 
 export const handleGetEventById = async (
@@ -40,7 +46,9 @@ export const handleGetEventById = async (
   res: Response,
 ) => {
   const event = await getEventById(req.params.id);
-  return res.json(event);
+
+  return successResponse(res, undefined, event, StatusCodes.OK);
+  // return res.json(event);
 };
 
 export const handleUpdateEvent = async (
@@ -48,7 +56,14 @@ export const handleUpdateEvent = async (
   res: Response,
 ) => {
   const event = await updateEvent(req.params.id, req.body);
-  return res.json(event);
+
+  return successResponse(
+    res,
+    'Email has been sent to the user',
+    event,
+    StatusCodes.ACCEPTED,
+  );
+  // return res.json(event);
 };
 
 export const handleDeleteEvent = async (
@@ -56,5 +71,7 @@ export const handleDeleteEvent = async (
   res: Response,
 ) => {
   await deleteEvent(req.params.id);
-  return res.json({ message: 'Event deleted' });
+
+  return successResponse(res, 'Event has been deleted');
+  // return res.json({ message: 'Event deleted' });
 };
