@@ -1,3 +1,4 @@
+import { idSchema } from '../../common/common.schema';
 import { canAccess } from '../../middlewares/can-access.middleware';
 import MagicRouter from '../../openapi/magic-router';
 import {
@@ -48,19 +49,31 @@ eventRouter.post(
 );
 
 // Rute untuk mendapatkan event berdasarkan ID
-eventRouter.get('/:id', {}, handleGetEventById);
+eventRouter.get(
+  '/:id',
+  { requestType: { params: idSchema } },
+  handleGetEventById,
+);
 
 // Rute untuk memperbarui event berdasarkan ID
-eventRouter.put('/:id', {}, handleUpdateEvent);
+eventRouter.put(
+  '/:id',
+  { requestType: { params: idSchema, body: createEventSchema } },
+  handleUpdateEvent,
+);
 
 // Rute untuk menghapus event berdasarkan ID
-eventRouter.delete('/:id', {}, handleDeleteEvent);
+eventRouter.delete(
+  '/:id',
+  { requestType: { params: idSchema } },
+  handleDeleteEvent,
+);
 
 // Rute untuk melakukan voting
 eventRouter.post(
   '/:id/vote',
   {
-    requestType: { body: createVoteSchema },
+    requestType: { params: idSchema, body: createVoteSchema },
   },
   canAccess('roles', ['DEFAULT_USER']),
   handleCreateVote,

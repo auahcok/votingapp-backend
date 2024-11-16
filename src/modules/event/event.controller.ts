@@ -94,7 +94,7 @@ export const handleGetActiveEvent = async (
 };
 
 export const handleUpdateEvent = async (
-  req: Request<{ id: string }, unknown, Partial<CreateEventSchemaType>>,
+  req: Request<{ id: string }, unknown, CreateEventSchemaType>,
   res: Response,
 ) => {
   const event = await updateEvent(req.params.id, req.body);
