@@ -238,15 +238,27 @@ export const updateEvent = async (
           await prisma.candidate.update({
             where: { id: candidate.id },
             data: {
-              ...candidate,
+              photo: candidate.photo,
+              name: candidate.name,
+              position: candidate.position,
+              sequence: candidate.sequence,
+              visi: candidate.visi,
+              misi: candidate.misi,
+              comment: candidate.comment,
             },
           });
         } else {
           // Create new candidate
           await prisma.candidate.create({
             data: {
-              ...candidate,
               eventId,
+              photo: candidate.photo,
+              name: candidate.name,
+              position: candidate.position,
+              sequence: candidate.sequence,
+              visi: candidate.visi,
+              misi: candidate.misi,
+              comment: candidate.comment,
             },
           });
         }
