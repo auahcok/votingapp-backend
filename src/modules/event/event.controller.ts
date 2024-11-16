@@ -51,23 +51,33 @@ export const handleGetEvents = async (
     let results, paginatorInfo;
 
     if (req.user.role === 'DEFAULT_USER') {
-      ({ results, paginatorInfo } = await getUserEvents(req.user.id, req.query));
+      ({ results, paginatorInfo } = await getUserEvents(
+        req.user.id,
+        req.query,
+      ));
       return successResponse(res, undefined, { results, paginatorInfo });
-
     } else if (req.user.role === 'SUPER_ADMIN') {
       ({ results, paginatorInfo } = await getAllEvents(req.query));
       return successResponse(res, undefined, { results, paginatorInfo });
-
     } else {
       return errorResponse(res, 'Unauthorized', StatusCodes.UNAUTHORIZED);
-
     }
   } catch (error) {
-    console.error('Error in handleGetEvents:', error);
+    console.error('Error in handleCreateVote:', error);
+
+    // Menggunakan errorResponse untuk menangani error
+    if (error instanceof Error) {
+      return errorResponse(
+        res,
+        error.message || 'Failed to create vote',
+        StatusCodes.BAD_REQUEST,
+        {},
+      );
+    }
 
     return errorResponse(
       res,
-      'Unexpected error occurred while fetching events',
+      'Unexpected error occurred while creating vote',
       StatusCodes.INTERNAL_SERVER_ERROR,
       {},
     );
