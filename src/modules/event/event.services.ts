@@ -186,13 +186,14 @@ export const deleteEvent = async (eventId: string): Promise<void> => {
 };
 
 export const createVote = async (
+  userId: string,
   eventId: string,
   payload: VoteType,
 ): Promise<UserVoteEvent> => {
   // Periksa apakah payload valid
   if (
     !eventId ||
-    !payload.userId ||
+    !userId ||
     !payload.candidateId
 
   ) {
@@ -213,7 +214,7 @@ export const createVote = async (
   // Periksa apakah user dengan ID tersebut ada
   const existingUser = await prisma.user.findUnique({
     where: { 
-      id: payload.userId
+      id: userId
     },
   });
 
@@ -231,7 +232,7 @@ export const createVote = async (
   const existingVote = await prisma.userVoteEvent.findFirst({
     where: {
       eventId: eventId,
-      userId: payload.userId,
+      userId: userId,
     },
   });
 
@@ -243,7 +244,7 @@ export const createVote = async (
     data: {
       eventId: eventId,
       candidateId: payload.candidateId,
-      userId: payload.userId,
+      userId: userId,
     },
   });
 

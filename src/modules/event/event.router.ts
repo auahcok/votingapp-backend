@@ -51,7 +51,7 @@ eventRouter.post(
   {
     requestType: { body: createVoteSchema },
   },
-  canAccess(),
+  canAccess('roles', ['DEFAULT_USER']),
   handleCreateVote,
 );
 

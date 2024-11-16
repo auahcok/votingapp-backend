@@ -81,7 +81,7 @@ export const handleCreateVote = async (
   req: Request<{id: string}, unknown, CreateVoteSchemaType>,
   res: Response,
 ) => {
-  const vote = await createVote(req.params.id, req.body);
+  const vote = await createVote(req.user.id, req.params.id, req.body);
 
   return successResponse(res, 'Vote has been created', vote, StatusCodes.CREATED);
   // return res.json(vote);
