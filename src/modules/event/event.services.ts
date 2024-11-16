@@ -147,7 +147,7 @@ export const createEvent = async (payload: EventType): Promise<Event> => {
     data: {
       title: payload.title,
       description: payload.description,
-      isActive: payload.isActive ? true : false,
+      isActive: Boolean(payload.isActive),
       startDate: payload.startDate,
       endDate: payload.endDate,
     },
@@ -209,25 +209,31 @@ export const updateEvent = async (
     data: {
       title: payload.title,
       description: payload.description,
-      isActive: payload.isActive ? true : false,
+      isActive: Boolean(payload.isActive),
       startDate: payload.startDate,
       endDate: payload.endDate,
     },
   });
 
-  // Update kandidat jika ada dalam payload
-  if (payload.candidates && payload.candidates.length > 0) {
-    // Delete candidates not in the payload
+  // Handle candidate updates
+  if (payload.candidates) {
+    const existingCandidateIds = existingEvent.candidates.map((c) => c.id);
+    const incomingCandidateIds = payload.candidates
+      .map((c) => c.id)
+      .filter((id): id is string => Boolean(id));
+
+    // Delete candidates that are not in the incoming payload
     await prisma.candidate.deleteMany({
       where: {
-        eventId: eventId,
-        id: { notIn: existingEvent.candidates.map((c) => c.id) },
+        eventId,
+        id: { notIn: incomingCandidateIds },
       },
     });
 
+    // Process candidates
     await Promise.all(
       payload.candidates.map(async (candidate) => {
-        if (candidate.id) {
+        if (candidate.id && existingCandidateIds.includes(candidate.id)) {
           // Update existing candidate
           await prisma.candidate.update({
             where: { id: candidate.id },
@@ -240,7 +246,7 @@ export const updateEvent = async (
           await prisma.candidate.create({
             data: {
               ...candidate,
-              eventId: eventId,
+              eventId,
             },
           });
         }
