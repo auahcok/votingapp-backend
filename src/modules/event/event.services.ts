@@ -41,7 +41,9 @@ export const getEvents = async (payload: GetEventsSchemaType) => {
 };
 
 // GET 1 ACTIVE EVENT
-export const getActiveEvent = async (payload: GetActiveEventSchemaType) => {
+export const getActiveEvent = async (
+  payload: GetActiveEventSchemaType,
+): Promise<Event> => {
   const conditions: Prisma.EventWhereInput = {
     isActive: true,
     ...(payload.keyword
@@ -54,7 +56,10 @@ export const getActiveEvent = async (payload: GetActiveEventSchemaType) => {
     include: { candidates: true, votes: true },
   });
 
-  return event as Event;
+  if (!event) {
+    throw new Error('Active event not found');
+  }
+  return event;
 };
 
 // GET EVENT BY ID with validation
