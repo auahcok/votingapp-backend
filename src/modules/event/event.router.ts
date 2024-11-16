@@ -7,11 +7,13 @@ import {
   handleDeleteEvent,
   handleGetEvents,
   handleCreateVote,
+  handleGetActiveEvent,
 } from './event.controller';
 import {
   createEventSchema,
   getEventsSchema,
   createVoteSchema,
+  getActiveEventSchema,
 } from './event.schema';
 // import { eventSchema } from './event.dto';
 
@@ -26,6 +28,14 @@ eventRouter.get(
     requestType: { query: getEventsSchema },
   },
   handleGetEvents,
+);
+
+eventRouter.get(
+  '/active',
+  {
+    requestType: { query: getActiveEventSchema },
+  },
+  handleGetActiveEvent,
 );
 
 // Rute untuk membuat event baru

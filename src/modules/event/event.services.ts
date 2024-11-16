@@ -2,7 +2,7 @@ import { PrismaClient, Event, Prisma, UserVoteEvent } from '@prisma/client';
 import { EventType, VoteType } from './event.dto';
 
 import { getPaginator } from '../../utils/getPaginator';
-import { GetEventsSchemaType } from './event.schema';
+import { GetActiveEventSchemaType, GetEventsSchemaType } from './event.schema';
 
 const prisma = new PrismaClient();
 
@@ -12,9 +12,6 @@ export const getEvents = async (payload: GetEventsSchemaType) => {
   const conditions: Prisma.EventWhereInput = {
     ...(payload.keyword
       ? { title: { contains: payload.keyword, mode: 'insensitive' } }
-      : {}),
-    ...(payload.isActive !== undefined
-      ? { isActive: payload.isActive == 'true' ? true : false }
       : {}),
   };
 
@@ -41,6 +38,23 @@ export const getEvents = async (payload: GetEventsSchemaType) => {
     results: events || [],
     paginatorInfo: paginatorInfo || {},
   };
+};
+
+// GET 1 ACTIVE EVENT
+export const getActiveEvent = async (payload: GetActiveEventSchemaType) => {
+  const conditions: Prisma.EventWhereInput = {
+    isActive: true,
+    ...(payload.keyword
+      ? { title: { contains: payload.keyword, mode: 'insensitive' } }
+      : {}),
+  };
+
+  const event = await prisma.event.findFirst({
+    where: conditions,
+    include: { candidates: true, votes: true },
+  });
+
+  return event as Event;
 };
 
 // GET EVENT BY ID with validation
@@ -191,12 +205,7 @@ export const createVote = async (
   payload: VoteType,
 ): Promise<UserVoteEvent> => {
   // Periksa apakah payload valid
-  if (
-    !eventId ||
-    !userId ||
-    !payload.candidateId
-
-  ) {
+  if (!eventId || !userId || !payload.candidateId) {
     throw new Error(
       'Missing required fields for voting: eventId, userId, and candidateId',
     );
@@ -204,8 +213,8 @@ export const createVote = async (
 
   // Periksa apakah event dengan ID tersebut ada
   const existingEvent = await prisma.event.findUnique({
-    where: { 
-      id: eventId
+    where: {
+      id: eventId,
     },
   });
 
@@ -213,8 +222,8 @@ export const createVote = async (
 
   // Periksa apakah user dengan ID tersebut ada
   const existingUser = await prisma.user.findUnique({
-    where: { 
-      id: userId
+    where: {
+      id: userId,
     },
   });
 
@@ -222,11 +231,11 @@ export const createVote = async (
 
   // Periksa apakah candidate dengan ID tersebut ada
   const existingCandidate = await prisma.candidate.findUnique({
-    where: { 
-      id: payload.candidateId
+    where: {
+      id: payload.candidateId,
     },
   });
-  
+
   if (!existingCandidate) throw new Error('Candidate not found');
 
   const existingVote = await prisma.userVoteEvent.findFirst({
@@ -248,5 +257,5 @@ export const createVote = async (
     },
   });
 
-  return vote; 
-}
+  return vote;
+};

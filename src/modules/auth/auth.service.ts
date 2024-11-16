@@ -103,8 +103,6 @@ export const loginUserByEmail = async (
 ): Promise<string> => {
   const user = await getUserByEmail(payload.email, true);
 
-  console.log(user);
-
   if (!user || !(await compareHash(String(user.password), payload.password))) {
     throw new Error('Invalid email or password');
   }
