@@ -40,7 +40,10 @@ export const getAllEvents = async (payload: GetEventsSchemaType) => {
 };
 
 // GET EVENTS with pagination and search functionality
-export const getUserEvents = async (userId: string, payload: GetEventsSchemaType) => {
+export const getUserEvents = async (
+  userId: string,
+  payload: GetEventsSchemaType,
+) => {
   // Kondisi untuk filter
   const conditions: Prisma.EventWhereInput = {
     ...(payload.keyword
@@ -132,6 +135,14 @@ export const createEvent = async (payload: EventType): Promise<Event> => {
     throw new Error('At least one candidate is required');
   }
 
+  // Update existing active event to inactive if isActive is true
+  if (payload.isActive) {
+    await prisma.event.updateMany({
+      where: { isActive: true },
+      data: { isActive: false },
+    });
+  }
+
   const event = await prisma.event.create({
     data: {
       title: payload.title,
@@ -166,6 +177,7 @@ export const updateEvent = async (
   // Periksa apakah event dengan ID tersebut ada
   const existingEvent = await prisma.event.findUnique({
     where: { id: eventId },
+    include: { candidates: true },
   });
   if (!existingEvent) throw new Error('Event not found');
 
@@ -181,6 +193,14 @@ export const updateEvent = async (
     );
   }
 
+  // Update existing active event to inactive if isActive is true
+  if (payload.isActive) {
+    await prisma.event.updateMany({
+      where: { isActive: true },
+      data: { isActive: false },
+    });
+  }
+
   // Perbarui data event
   const updatedEvent = await prisma.event.update({
     where: {
@@ -189,7 +209,7 @@ export const updateEvent = async (
     data: {
       title: payload.title,
       description: payload.description,
-      isActive: payload.isActive,
+      isActive: payload.isActive ? true : false,
       startDate: payload.startDate,
       endDate: payload.endDate,
     },
@@ -197,51 +217,41 @@ export const updateEvent = async (
 
   // Update kandidat jika ada dalam payload
   if (payload.candidates && payload.candidates.length > 0) {
-    // Hapus kandidat yang ada sebelumnya
+    // Delete candidates not in the payload
     await prisma.candidate.deleteMany({
-      where: { eventId: eventId },
+      where: {
+        eventId: eventId,
+        id: { notIn: existingEvent.candidates.map((c) => c.id) },
+      },
     });
 
-    // Tambahkan kandidat baru
     await Promise.all(
-      payload.candidates.map((candidate) =>
-        prisma.candidate.create({
-          data: {
-            ...candidate,
-            eventId: eventId,
-          },
-        }),
-      ),
+      payload.candidates.map(async (candidate) => {
+        if (candidate.id) {
+          // Update existing candidate
+          await prisma.candidate.update({
+            where: { id: candidate.id },
+            data: {
+              ...candidate,
+            },
+          });
+        } else {
+          // Create new candidate
+          await prisma.candidate.create({
+            data: {
+              ...candidate,
+              eventId: eventId,
+            },
+          });
+        }
+      }),
     );
   }
 
   return updatedEvent;
 };
 
-// DELETE EVENT with validation
-export const deleteEvent = async (eventId: string): Promise<void> => {
-  if (!eventId) throw new Error('Event ID is required');
-
-  try {
-    await prisma.event.delete({
-      where: {
-        id: eventId,
-      },
-    });
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2025'
-    ) {
-      throw new Error('Event not found or has already been deleted');
-    }
-    if (error instanceof Error) {
-      throw new Error(`Failed to delete event: ${error.message}`);
-    }
-    throw error;
-  }
-};
-
+// CREATE VOTE with validation
 export const createVote = async (
   userId: string,
   eventId: string,
@@ -301,4 +311,28 @@ export const createVote = async (
   });
 
   return vote;
+};
+
+// DELETE EVENT with validation
+export const deleteEvent = async (eventId: string): Promise<void> => {
+  if (!eventId) throw new Error('Event ID is required');
+
+  try {
+    await prisma.event.delete({
+      where: {
+        id: eventId,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2025'
+    ) {
+      throw new Error('Event not found or has already been deleted');
+    }
+    if (error instanceof Error) {
+      throw new Error(`Failed to delete event: ${error.message}`);
+    }
+    throw error;
+  }
 };

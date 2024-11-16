@@ -22,8 +22,8 @@ export const RoleTypeZ = z.enum(Object.keys(ROLE_ENUM) as [RoleType]);
 // });
 
 export const userOutSchema = z.object({
-  id: z.string(),
-  name: z.string(),
+  id: z.string().min(1, 'Candidate ID is required').optional(),
+  name: z.string().min(1, 'Name is required'),
   email: z.string().email(),
   password: z.string().nullable().optional(),
   avatar: z.string().nullable().optional(),
