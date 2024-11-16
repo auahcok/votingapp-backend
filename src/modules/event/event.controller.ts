@@ -37,6 +37,7 @@ export const handleGetEventById = async (
   req: Request<{ id: string }>,
   res: Response,
 ) => {
+  console.log(req.params);
   const event = await getEventById(req.params.id);
 
   return successResponse(res, undefined, event);

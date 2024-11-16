@@ -46,10 +46,9 @@ export const mongoIdSchema = z.object({
 });
 
 export const idSchema = z.object({
-  id: z
-    .string()
-    .refine((value) => isNaN(Number(value)))
-    .transform(Number),
+  id: z.string(),
+  // .refine((value) => isNaN(Number(value)))
+  // .transform(Number),
 });
 
 export const passwordValidationSchema = (fieldName: string) =>
