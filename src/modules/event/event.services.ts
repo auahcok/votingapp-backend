@@ -1,18 +1,56 @@
 import { PrismaClient, Event, Prisma, UserVoteEvent } from '@prisma/client';
 import { EventType, VoteType } from './event.dto';
-
 import { getPaginator } from '../../utils/getPaginator';
 import { GetActiveEventSchemaType, GetEventsSchemaType } from './event.schema';
 
 const prisma = new PrismaClient();
 
 // GET EVENTS with pagination and search functionality
-export const getEvents = async (payload: GetEventsSchemaType) => {
+export const getAllEvents = async (payload: GetEventsSchemaType) => {
   // Kondisi untuk filter
   const conditions: Prisma.EventWhereInput = {
     ...(payload.keyword
       ? { title: { contains: payload.keyword, mode: 'insensitive' } }
       : {}),
+  };
+
+  // Hitung total records
+  const totalRecords = await prisma.event.count({ where: conditions });
+
+  // Paginator
+  const paginatorInfo = getPaginator(
+    payload.limitParam,
+    payload.pageParam,
+    totalRecords,
+  );
+
+  // Ambil data events dengan semua field yang diperlukan
+  const events = await prisma.event.findMany({
+    where: conditions,
+    take: paginatorInfo.limit,
+    skip: paginatorInfo.skip,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // Pastikan data response sesuai dengan validasi
+  return {
+    results: events || [],
+    paginatorInfo: paginatorInfo || {},
+  };
+};
+
+// GET EVENTS with pagination and search functionality
+export const getUserEvents = async (userId: string, payload: GetEventsSchemaType) => {
+  // Kondisi untuk filter
+  const conditions: Prisma.EventWhereInput = {
+    ...(payload.keyword
+      ? { title: { contains: payload.keyword, mode: 'insensitive' } }
+      : {}),
+    votes: {
+      some: {
+        userId: userId,
+      },
+    },
   };
 
   // Hitung total records

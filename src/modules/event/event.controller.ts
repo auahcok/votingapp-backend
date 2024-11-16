@@ -10,7 +10,8 @@ import {
   getEventById,
   updateEvent,
   deleteEvent,
-  getEvents,
+  getAllEvents,
+  getUserEvents,
   createVote,
   getActiveEvent,
 } from './event.services';
@@ -46,9 +47,31 @@ export const handleGetEvents = async (
   req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
   res: Response,
 ) => {
-  const { results, paginatorInfo } = await getEvents(req.query);
+  try {
+    let results, paginatorInfo;
 
-  return successResponse(res, undefined, { results, paginatorInfo });
+    if (req.user.role === 'DEFAULT_USER') {
+      ({ results, paginatorInfo } = await getUserEvents(req.user.id, req.query));
+      return successResponse(res, undefined, { results, paginatorInfo });
+
+    } else if (req.user.role === 'SUPER_ADMIN') {
+      ({ results, paginatorInfo } = await getAllEvents(req.query));
+      return successResponse(res, undefined, { results, paginatorInfo });
+
+    } else {
+      return errorResponse(res, 'Unauthorized', StatusCodes.UNAUTHORIZED);
+
+    }
+  } catch (error) {
+    console.error('Error in handleGetEvents:', error);
+
+    return errorResponse(
+      res,
+      'Unexpected error occurred while fetching events',
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      {},
+    );
+  }
 };
 
 export const handleGetActiveEvent = async (
@@ -90,8 +113,6 @@ export const handleCreateVote = async (
   res: Response,
 ) => {
   try {
-    console.log(req.user);
-
     // Memanggil fungsi `createVote`
     const vote = await createVote(req.user.id, req.params.id, req.body);
 

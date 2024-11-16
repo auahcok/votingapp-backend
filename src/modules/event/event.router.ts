@@ -27,6 +27,7 @@ eventRouter.get(
   {
     requestType: { query: getEventsSchema },
   },
+  canAccess(),
   handleGetEvents,
 );
 
