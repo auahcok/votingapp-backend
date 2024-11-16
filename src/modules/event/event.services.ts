@@ -183,10 +183,10 @@ export const updateEvent = async (
 
   // Validasi untuk field penting
   if (
-    payload.title === '' ||
-    payload.startDate === undefined ||
-    payload.endDate === undefined ||
-    payload.description === ''
+    !payload.title ||
+    !payload.startDate ||
+    !payload.endDate ||
+    !payload.description
   ) {
     throw new Error(
       'Missing required fields for update: title, startDate, endDate, and description',
@@ -222,13 +222,26 @@ export const updateEvent = async (
       .map((c) => c.id)
       .filter((id): id is string => Boolean(id));
 
-    // Delete candidates that are not in the incoming payload
-    await prisma.candidate.deleteMany({
-      where: {
-        eventId,
-        id: { notIn: incomingCandidateIds },
-      },
-    });
+    // Find candidates to delete
+    const candidatesToDelete = existingCandidateIds.filter(
+      (id) => !incomingCandidateIds.includes(id),
+    );
+
+    // Delete UserVotes associated with candidates to be deleted
+    if (candidatesToDelete.length > 0) {
+      await prisma.userVoteEvent.deleteMany({
+        where: {
+          candidateId: { in: candidatesToDelete },
+        },
+      });
+
+      // Delete the candidates
+      await prisma.candidate.deleteMany({
+        where: {
+          id: { in: candidatesToDelete },
+        },
+      });
+    }
 
     // Process candidates
     await Promise.all(
@@ -336,6 +349,27 @@ export const deleteEvent = async (eventId: string): Promise<void> => {
   if (!eventId) throw new Error('Event ID is required');
 
   try {
+    // Fetch candidates associated with the event
+    const candidates = await prisma.candidate.findMany({
+      where: { eventId },
+      select: { id: true }, // Only fetch candidate IDs
+    });
+
+    if (candidates.length > 0) {
+      const candidateIds = candidates.map((candidate) => candidate.id);
+
+      // Delete UserVotes associated with these candidates
+      await prisma.userVoteEvent.deleteMany({
+        where: { candidateId: { in: candidateIds } },
+      });
+
+      // Delete the candidates themselves
+      await prisma.candidate.deleteMany({
+        where: { id: { in: candidateIds } },
+      });
+    }
+
+    // Delete the event itself
     await prisma.event.delete({
       where: {
         id: eventId,
