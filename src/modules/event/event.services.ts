@@ -2,8 +2,16 @@ import { PrismaClient, Event, Prisma, UserVoteEvent } from '@prisma/client';
 import { EventType, VoteType } from './event.dto';
 import { getPaginator } from '../../utils/getPaginator';
 import { GetActiveEventSchemaType, GetEventsSchemaType } from './event.schema';
+import { Voting__factory } from '../../../typechain-types';
+import { ethers } from 'hardhat';
+import { ContractTransactionResponse } from 'ethers';
 
 const prisma = new PrismaClient();
+
+// Konfigurasi Blockchain menggunakan Hardhat
+const provider = new ethers.JsonRpcProvider('http://localhost:8545');
+const privateKey = process.env.PRIVATE_KEY || '';
+const wallet = new ethers.Wallet(privateKey, provider);
 
 // GET EVENTS with pagination and search functionality
 export const getAllEvents = async (payload: GetEventsSchemaType) => {
@@ -333,15 +341,47 @@ export const createVote = async (
     throw new Error('You have already voted for this event');
   }
 
-  const vote = await prisma.userVoteEvent.create({
-    data: {
-      eventId: eventId,
-      candidateId: payload.candidateId,
-      userId: userId,
-    },
-  });
+  const votingContract = Voting__factory.connect(
+    process.env.CONTRACT_ADDRESS || '', // Alamat kontrak voting
+    wallet,
+  );
 
-  return vote;
+  // Hash data vote untuk mencatat ke blockchain
+  const voteHash = ethers.keccak256(
+    ethers.AbiCoder.defaultAbiCoder().encode(
+      ['string', 'string', 'string'],
+      [userId, eventId, payload.candidateId],
+    ),
+  );
+
+  try {
+    // Panggil kontrak untuk mencatat vote di blockchain
+    const tx: ContractTransactionResponse = await votingContract.castVote(
+      userId,
+      eventId,
+      payload.candidateId,
+    );
+
+    // Tunggu transaksi selesai dan dapatkan receipt
+    const receipt = await tx.wait();
+    console.log(`Vote hash stored on blockchain: ${voteHash}`);
+    console.log(`Transaction hash: ${receipt?.hash}`);
+
+    // Simpan vote ke database setelah transaksi blockchain berhasil
+    const vote = await prisma.userVoteEvent.create({
+      data: {
+        eventId: eventId,
+        candidateId: payload.candidateId,
+        userId: userId,
+        transactionHash: receipt?.hash,
+      },
+    });
+
+    return vote;
+  } catch (error) {
+    console.error('Error during blockchain transaction:', error);
+    throw new Error('Failed to record vote on blockchain');
+  }
 };
 
 // DELETE EVENT with validation
