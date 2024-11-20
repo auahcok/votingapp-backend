@@ -85,11 +85,8 @@ export const handleVoteForCandidate = async (req: Request, res: Response) => {
   } catch (error: any) {
     return res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
   }
-};
 
-
-//
-
+  
 // export const handleGetEvents = async (
 //   req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
 //   res: Response,
