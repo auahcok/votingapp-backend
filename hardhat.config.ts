@@ -20,6 +20,7 @@ const config: HardhatUserConfig = {
     sources: './src/contracts',
     ignition: './src/ignition',
   },
+  defaultNetwork: 'hardhat',
   typechain: {
     outDir: 'typechain-types',
     target: 'ethers-v6',
