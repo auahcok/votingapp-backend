@@ -36,7 +36,7 @@ export const errorResponse = (
 
     return;
   } catch (err) {
-    logger.error(err);
+    logger.error((err as Error).message);
   }
 };
 
@@ -61,7 +61,7 @@ export const successResponse = (
 
     return;
   } catch (err) {
-    logger.error(err);
+    logger.error((err as Error).message);
   }
 };
 // export const successResponse = (
