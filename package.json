@@ -18,7 +18,7 @@
     "hh:typechain": "npx hardhat typechain",
     "hh:compile": "npx hardhat compile",
     "hh:ignite": "npx hardhat ignition deploy src/ignition/modules/Voting.ts --network localhost",
-    "vercel-build": "prisma generate && prisma migrate deploy && npm run build"
+    "vercel-build": "prisma generate && npm run build"
   },
   "devDependencies": {
     "@eslint/js": "^9.4.0",
