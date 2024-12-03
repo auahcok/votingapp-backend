@@ -15,14 +15,14 @@ const config: HardhatUserConfig = {
     },
   },
   paths: {
-    artifacts: '/tmp/hardhat/artifacts',
-    cache: '/tmp/hardhat/cache',
-    sources: '/tmp/hardhat/contracts',
-    ignition: '/tmp/hardhat/ignition',
+    artifacts: 'temp/hardhat/artifacts',
+    cache: 'temp/hardhat/cache',
+    sources: 'temp/hardhat/contracts',
+    ignition: 'temp/hardhat/ignition',
   },
   defaultNetwork: 'hardhat',
   typechain: {
-    outDir: '/tmp/hardhat/typechain-types',
+    outDir: 'temp/hardhat/typechain-types',
     target: 'ethers-v6',
   },
 };
