@@ -4,6 +4,7 @@
   "description": "",
   "main": "dist/main.js",
   "scripts": {
+    "prebuild": "pnpm run hh:typechain",
     "dev": "dotenv -e .env -- ts-node-dev --transpile-only ./src/main.ts",
     "seeder": "ts-node --transpile-only ./src/seeder.ts",
     "build": "tsup --config build.ts",
