@@ -1,5 +1,7 @@
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
+import os from 'os';
+import path from 'path';
 
 const config: HardhatUserConfig = {
   solidity: '0.8.27',
@@ -15,16 +17,12 @@ const config: HardhatUserConfig = {
     cache: 'temp/hardhat/cache',
     sources: 'temp/hardhat/contracts',
     ignition: 'temp/hardhat/ignition',
-    configFiles: 'temp/hardhat',
+    configFiles: path.join(os.tmpdir(), 'hardhat-config'),
   },
   defaultNetwork: 'hardhat',
   typechain: {
     outDir: 'temp/hardhat/typechain-types',
     target: 'ethers-v6',
-  },
-  config: {
-    silent: true,
-    saveCache: false,
   },
 };
 
