@@ -2,9 +2,9 @@ import { PrismaClient, Event, Prisma, UserVoteEvent } from '@prisma/client';
 import { EventType, VoteType } from './event.dto';
 import { getPaginator } from '../../utils/getPaginator';
 import { GetActiveEventSchemaType, GetEventsSchemaType } from './event.schema';
-import { Voting__factory } from '../../../typechain-types';
 import { ethers } from 'hardhat';
 import { ContractTransactionResponse } from 'ethers';
+import { Voting__factory } from '../../../tmp/hardhat/typechain-types';
 
 const prisma = new PrismaClient();
 
