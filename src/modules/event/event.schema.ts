@@ -12,6 +12,8 @@ export const getEventsSchema = z.object({
 
 export const getActiveEventSchema = z.object({
   keyword: z.string().optional(),
+  limitParam: z.string().default('15').transform(Number),
+  pageParam: z.string().default('1').transform(Number),
 });
 
 export const createVoteSchema = z.object({

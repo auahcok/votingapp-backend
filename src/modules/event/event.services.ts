@@ -37,7 +37,7 @@ export const getAllEvents = async (payload: GetEventsSchemaType) => {
     where: conditions,
     take: paginatorInfo.limit,
     skip: paginatorInfo.skip,
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
   });
 
   // Pastikan data response sesuai dengan validasi
@@ -79,7 +79,7 @@ export const getUserEvents = async (
     where: conditions,
     take: paginatorInfo.limit,
     skip: paginatorInfo.skip,
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
   });
 
   // Pastikan data response sesuai dengan validasi
@@ -90,9 +90,7 @@ export const getUserEvents = async (
 };
 
 // GET 1 ACTIVE EVENT
-export const getActiveEvent = async (
-  payload: GetActiveEventSchemaType,
-): Promise<Event> => {
+export const getActiveEvent = async (payload: GetActiveEventSchemaType) => {
   const conditions: Prisma.EventWhereInput = {
     isActive: true,
     ...(payload.keyword
@@ -102,28 +100,99 @@ export const getActiveEvent = async (
 
   const event = await prisma.event.findFirst({
     where: conditions,
-    include: { candidates: true, votes: true },
+    include: {
+      candidates: true,
+    },
   });
 
   if (!event) {
     throw new Error('Active event not found');
   }
-  return event;
+
+  // Paginasi untuk votes
+  const voteConditions: Prisma.UserVoteEventWhereInput = { eventId: event.id };
+  const totalVotes = await prisma.userVoteEvent.count({
+    where: voteConditions,
+  });
+
+  const candidateVotes = await Promise.all(
+    event.candidates.map(async (candidate) => {
+      const votes = await prisma.userVoteEvent.count({
+        where: {
+          eventId: event.id,
+          candidateId: candidate.id,
+        },
+      });
+      return {
+        candidateId: candidate.id,
+        position: candidate.position,
+        votes,
+      };
+    }),
+  );
+
+  const paginatorInfo = getPaginator(
+    payload.limitParam || 15, // Default limit
+    payload.pageParam || 1, // Default page
+    totalVotes,
+  );
+
+  const votes = await prisma.userVoteEvent.findMany({
+    where: voteConditions,
+    include: { user: true },
+    orderBy: { createdAt: 'desc' },
+    take: paginatorInfo.limit,
+    skip: paginatorInfo.skip,
+  });
+
+  return {
+    event,
+    votes,
+    candidateVotes,
+    paginatorInfo,
+  };
 };
 
 // GET EVENT BY ID with validation
-export const getEventById = async (eventId: string): Promise<Event> => {
+export const getEventById = async (eventId: string) => {
   if (!eventId) throw new Error('Event ID is required');
 
   const event = await prisma.event.findUnique({
     where: {
       id: eventId,
     },
+    include: { candidates: true },
   });
 
   if (!event) throw new Error('Event not found');
 
-  return event;
+  const totalVotes = await prisma.userVoteEvent.count({
+    where: {
+      eventId: eventId,
+    },
+  });
+
+  const candidateVotes = await Promise.all(
+    event.candidates.map(async (candidate) => {
+      const votes = await prisma.userVoteEvent.count({
+        where: {
+          eventId: eventId,
+          candidateId: candidate.id,
+        },
+      });
+      return {
+        candidateId: candidate.id,
+        position: candidate.position,
+        votes,
+      };
+    }),
+  );
+
+  return {
+    event,
+    totalVotes,
+    candidateVotes,
+  };
 };
 
 // CREATE EVENT with validation
@@ -220,6 +289,7 @@ export const updateEvent = async (
       isActive: Boolean(payload.isActive),
       startDate: payload.startDate,
       endDate: payload.endDate,
+      updatedAt: new Date(),
     },
   });
 
@@ -374,6 +444,8 @@ export const createVote = async (
         candidateId: payload.candidateId,
         userId: userId,
         transactionHash: receipt?.hash,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
