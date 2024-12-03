@@ -1,7 +1,13 @@
 import '../src/main';
-// import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
 
-// const tmpDir = '/temp/hardhat';
-// if (!fs.existsSync(tmpDir)) {
-//   fs.mkdirSync(tmpDir, { recursive: true });
-// }
+// Set environment variable for Hardhat global directory
+const tmpPath = path.join('/tmp', 'hardhat_global_dir');
+
+// Buat direktori jika belum ada
+if (!fs.existsSync(tmpPath)) {
+  fs.mkdirSync(tmpPath, { recursive: true });
+}
+
+process.env.HARDHAT_GLOBAL_DIR = tmpPath;
