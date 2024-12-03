@@ -6,12 +6,8 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       chainId: 1337,
-      // accounts: [
-      //   {
-      //     privateKey: process.env.PRIVATE_KEY || '',
-      //     balance: '1000000000000000000000',
-      //   },
-      // ],
+      allowUnlimitedContractSize: true,
+      forking: undefined,
     },
   },
   paths: {
@@ -19,11 +15,16 @@ const config: HardhatUserConfig = {
     cache: 'temp/hardhat/cache',
     sources: 'temp/hardhat/contracts',
     ignition: 'temp/hardhat/ignition',
+    configFiles: 'temp/hardhat',
   },
   defaultNetwork: 'hardhat',
   typechain: {
     outDir: 'temp/hardhat/typechain-types',
     target: 'ethers-v6',
+  },
+  config: {
+    silent: true,
+    saveCache: false,
   },
 };
 
