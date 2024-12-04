@@ -4,7 +4,7 @@ import { getPaginator } from '../../utils/getPaginator';
 import { GetActiveEventSchemaType, GetEventsSchemaType } from './event.schema';
 import { ethers } from 'hardhat';
 import { ContractTransactionResponse } from 'ethers';
-import { Voting__factory } from '../../../temp/hardhat/typechain-types';
+import { Voting__factory } from '../../../tmp/hardhat/typechain-types';
 
 const prisma = new PrismaClient();
 

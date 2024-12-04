@@ -17,7 +17,7 @@
     "hh": "npx hardhat node",
     "hh:typechain": "npx hardhat typechain",
     "hh:compile": "npx hardhat compile",
-    "hh:ignite": "npx hardhat ignition deploy temp/hardhat/ignition/modules/Voting.ts --network localhost",
+    "hh:ignite": "npx hardhat ignition deploy tmp/hardhat/ignition/modules/Voting.ts --network localhost",
     "vercel-build": "prisma generate && npm run build"
   },
   "devDependencies": {
