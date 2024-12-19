@@ -90,19 +90,16 @@ export const deleteUser = async (userId: MongoIdSchemaType) => {
   }
 };
 
-// user.services.ts
 export const getUsers = async (
-  userId: MongoIdSchemaType,
+  // userId: MongoIdSchemaType,
   payload: GetUsersSchemaType,
 ) => {
-  const { id } = userId;
+  // const { id } = userId;
 
-  console.log(id, userId);
-
-  const currentUser = await prisma.user.findUnique({ where: { id } });
-  if (!currentUser) {
-    throw new Error('User must be logged in');
-  }
+  // const currentUser = await prisma.user.findUnique({ where: { id } });
+  // if (!currentUser) {
+  //   throw new Error('User must be logged in');
+  // }
 
   const conditions: Prisma.UserWhereInput = {};
 

@@ -1,14 +1,21 @@
 import { Request, Response } from 'express';
-import { CreateEventSchemaType, GetEventsSchemaType } from './event.schema';
+import {
+  CreateEventSchemaType,
+  GetEventsSchemaType,
+  CreateVoteSchemaType,
+  GetActiveEventSchemaType,
+} from './event.schema';
 import {
   createEvent,
   getEventById,
   updateEvent,
   deleteEvent,
-  getEvents,
-  voteForCandidate
+  getAllEvents,
+  getUserEvents,
+  createVote,
+  getActiveEvent,
 } from './event.services';
-import { successResponse } from '../../utils/api.utils';
+import { errorResponse, successResponse } from '../../utils/api.utils';
 import { StatusCodes } from 'http-status-codes';
 
 export const handleCreateEvent = async (
@@ -30,6 +37,7 @@ export const handleGetEventById = async (
   req: Request<{ id: string }>,
   res: Response,
 ) => {
+  console.log(req.params);
   const event = await getEventById(req.params.id);
 
   return successResponse(res, undefined, event);
@@ -40,20 +48,54 @@ export const handleGetEvents = async (
   req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
   res: Response,
 ) => {
-  // const { keyword, limitParam, pageParam, isActive } = req.query;
-  // const limit = parseInt(limitParam as unknown as string) || 10;
-  // const page = parseInt(pageParam as unknown as string) || 1;
-  // const activeStatus =
-  //   isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+  try {
+    let results, paginatorInfo;
 
-  const { results, paginatorInfo } = await getEvents(req.query);
+    if (req.user.role === 'DEFAULT_USER') {
+      ({ results, paginatorInfo } = await getUserEvents(
+        req.user.id,
+        req.query,
+      ));
+      return successResponse(res, undefined, { results, paginatorInfo });
+    } else if (req.user.role === 'SUPER_ADMIN') {
+      ({ results, paginatorInfo } = await getAllEvents(req.query));
+      return successResponse(res, undefined, { results, paginatorInfo });
+    } else {
+      return errorResponse(res, 'Unauthorized', StatusCodes.UNAUTHORIZED);
+    }
+  } catch (error) {
+    console.error('Error in handleCreateVote:', error);
 
-  // return res.json({ results, totalRecords });
-  return successResponse(res, undefined, { results, paginatorInfo });
+    // Menggunakan errorResponse untuk menangani error
+    if (error instanceof Error) {
+      return errorResponse(
+        res,
+        error.message || 'Failed to create vote',
+        StatusCodes.BAD_REQUEST,
+        {},
+      );
+    }
+
+    return errorResponse(
+      res,
+      'Unexpected error occurred while creating vote',
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      {},
+    );
+  }
+};
+
+export const handleGetActiveEvent = async (
+  req: Request<unknown, unknown, unknown, GetActiveEventSchemaType>,
+  res: Response,
+) => {
+  const results = await getActiveEvent(req.query);
+
+  return successResponse(res, undefined, results);
 };
 
 export const handleUpdateEvent = async (
-  req: Request<{ id: string }, unknown, Partial<CreateEventSchemaType>>,
+  req: Request<{ id: string }, unknown, CreateEventSchemaType>,
   res: Response,
 ) => {
   const event = await updateEvent(req.params.id, req.body);
@@ -77,25 +119,39 @@ export const handleDeleteEvent = async (
   // return res.json({ message: 'Event deleted' });
 };
 
-export const handleVoteForCandidate = async (req: Request, res: Response) => {
-  const { userId, eventId, candidateId } = req.body;  
+export const handleCreateVote = async (
+  req: Request<{ id: string }, unknown, CreateVoteSchemaType>,
+  res: Response,
+) => {
   try {
-    const vote = await voteForCandidate(userId, eventId, candidateId);
-    return successResponse(res, 'Vote berhasil dicatat', vote, StatusCodes.OK);
-  } catch (error: any) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+    // Memanggil fungsi `createVote`
+    const vote = await createVote(req.user.id, req.params.id, req.body);
+
+    // Response sukses
+    return successResponse(
+      res,
+      'Vote has been created',
+      vote,
+      StatusCodes.CREATED,
+    );
+  } catch (error) {
+    console.error('Error in handleCreateVote:', error);
+
+    // Menggunakan errorResponse untuk menangani error
+    if (error instanceof Error) {
+      return errorResponse(
+        res,
+        error.message || 'Failed to create vote',
+        StatusCodes.BAD_REQUEST,
+        {},
+      );
+    }
+
+    return errorResponse(
+      res,
+      'Unexpected error occurred while creating vote',
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      {},
+    );
   }
-
-  
-// export const handleGetEvents = async (
-//   req: Request<unknown, unknown, unknown, GetEventsSchemaType>,
-//   res: Response,
-// ) => {
-//   const { searchString, limitParam, pageParam, isActive } = req.query;
-//   const limit = parseInt(limitParam as unknown as string) || 10;
-//   const page = parseInt(pageParam as unknown as string) || 1;
-//   const activeStatus = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
-
-//   const { results, totalRecords } = await getEvents(searchString, limit, page, activeStatus);
-//   return res.json({ results, totalRecords });
-// };
+};

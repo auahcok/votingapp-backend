@@ -1,3 +1,4 @@
+import { idSchema } from '../../common/common.schema';
 import { canAccess } from '../../middlewares/can-access.middleware';
 import MagicRouter from '../../openapi/magic-router';
 import {
@@ -6,11 +7,16 @@ import {
   handleUpdateEvent,
   handleDeleteEvent,
   handleGetEvents,
-  handleVoteForCandidate
+  handleCreateVote,
+  handleGetActiveEvent,
 } from './event.controller';
-import { createEventSchema, getEventsSchema } from './event.schema';
-import { eventSchema } from './event.dto';
-import asyncHandler from 'express-async-handler';
+import {
+  createEventSchema,
+  getEventsSchema,
+  createVoteSchema,
+  getActiveEventSchema,
+} from './event.schema';
+// import { eventSchema } from './event.dto';
 
 export const EVENT_ROUTER_ROOT = '/events';
 
@@ -22,7 +28,16 @@ eventRouter.get(
   {
     requestType: { query: getEventsSchema },
   },
+  canAccess(),
   handleGetEvents,
+);
+
+eventRouter.get(
+  '/active',
+  {
+    requestType: { query: getActiveEventSchema },
+  },
+  handleGetActiveEvent,
 );
 
 // Rute untuk membuat event baru
@@ -34,15 +49,34 @@ eventRouter.post(
 );
 
 // Rute untuk mendapatkan event berdasarkan ID
-eventRouter.get('/:id', {}, handleGetEventById);
+eventRouter.get(
+  '/:id',
+  { requestType: { params: idSchema } },
+  handleGetEventById,
+);
 
 // Rute untuk memperbarui event berdasarkan ID
-eventRouter.put('/:id', {}, handleUpdateEvent);
+eventRouter.put(
+  '/:id',
+  { requestType: { params: idSchema, body: createEventSchema } },
+  handleUpdateEvent,
+);
 
 // Rute untuk menghapus event berdasarkan ID
-eventRouter.delete('/:id', handleDeleteEvent);
+eventRouter.delete(
+  '/:id',
+  { requestType: { params: idSchema } },
+  handleDeleteEvent,
+);
 
-// Rute untuk vote
-eventRouter.post('/vote',{}, handleVoteForCandidate);
+// Rute untuk melakukan voting
+eventRouter.post(
+  '/:id/vote',
+  {
+    requestType: { params: idSchema, body: createVoteSchema },
+  },
+  canAccess('roles', ['DEFAULT_USER']),
+  handleCreateVote,
+);
 
 export default eventRouter.getRouter();

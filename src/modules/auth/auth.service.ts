@@ -47,7 +47,7 @@ export const forgetPassword = async (
 ): Promise<UserType> => {
   const user = await getUserByEmail(payload.email);
 
-  if (!user) {
+  if (!user || !user?.id) {
     throw new Error("user doesn't exists");
   }
 
@@ -103,8 +103,6 @@ export const loginUserByEmail = async (
 ): Promise<string> => {
   const user = await getUserByEmail(payload.email, true);
 
-  console.log(user);
-
   if (!user || !(await compareHash(String(user.password), payload.password))) {
     throw new Error('Invalid email or password');
   }
@@ -145,7 +143,7 @@ export const googleLogin = async (
 
   const user = await getUserByEmail(email);
 
-  if (!user) {
+  if (!user || !user?.id) {
     const newUser = await createUser({
       email,
       name,

@@ -64,11 +64,12 @@ model Candidate {
 
 // UserVoteEvent
 model UserVoteEvent {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId // Use ObjectId type for MongoDB
-  userId      String    @db.ObjectId // Reference to user's metamaskAddress
-  eventId     String    @db.ObjectId // Reference to event's id
-  candidateId String    @db.ObjectId // Reference to candidate's id
-  user        User      @relation(fields: [userId], references: [id])
-  event       Event     @relation(fields: [eventId], references: [id])
-  candidate   Candidate @relation(fields: [candidateId], references: [id])
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId // Use ObjectId type for MongoDB
+  userId          String    @db.ObjectId // Reference to user's metamaskAddress
+  eventId         String    @db.ObjectId // Reference to event's id
+  candidateId     String    @db.ObjectId // Reference to candidate's id
+  transactionHash String?
+  user            User      @relation(fields: [userId], references: [id])
+  event           Event     @relation(fields: [eventId], references: [id])
+  candidate       Candidate @relation(fields: [candidateId], references: [id])
 }

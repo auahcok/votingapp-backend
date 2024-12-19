@@ -2,6 +2,7 @@ import z from 'zod';
 
 // Schema untuk Kandidat
 export const candidateSchema = z.object({
+  id: z.string().min(1, 'Candidate ID is required').optional(),
   eventId: z.string().min(1, 'Event ID is required').optional(),
   photo: z.string().min(1, 'Photo is required'),
   name: z.string().min(1, 'Candidate name is required'),
@@ -16,6 +17,7 @@ export const candidateSchema = z.object({
 
 // Schema untuk Event
 export const eventSchema = z.object({
+  id: z.string().min(1, 'Candidate ID is required').optional(),
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
   isActive: z.boolean().optional(),
@@ -28,5 +30,10 @@ export const eventSchema = z.object({
   candidates: z.array(candidateSchema).optional(),
 });
 
-// Tipe event
+// Schema untuk Vote
+export const voteSchema = z.object({
+  candidateId: z.string().min(1, 'Candidate ID is required'),
+});
+
 export type EventType = z.infer<typeof eventSchema>;
+export type VoteType = z.infer<typeof voteSchema>;
