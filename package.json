@@ -4,6 +4,7 @@
   "description": "",
   "main": "dist/main.js",
   "scripts": {
+    "prebuild": "pnpm run hh:typechain",
     "dev": "dotenv -e .env -- ts-node-dev --transpile-only ./src/main.ts",
     "seeder": "ts-node --transpile-only ./src/seeder.ts",
     "build": "tsup --config build.ts",
@@ -14,8 +15,10 @@
     "migrate:dev": "pnpm dlx prisma migrate dev",
     "migrate:deploy": "pnpm dlx prisma migrate deploy",
     "hh": "npx hardhat node",
+    "hh:typechain": "npx hardhat typechain",
     "hh:compile": "npx hardhat compile",
-    "hh:ignite": "npx hardhat ignition deploy src/ignition/modules/Voting.ts --network localhost"
+    "hh:ignite": "npx hardhat ignition deploy tmp/hardhat/ignition/modules/Voting.ts --network localhost",
+    "vercel-build": "prisma generate && npm run build"
   },
   "devDependencies": {
     "@eslint/js": "^9.4.0",
@@ -100,7 +103,7 @@
     "passport-jwt": "^4.0.1",
     "pino": "^9.1.0",
     "pino-http": "^10.1.0",
-    "pino-pretty": "^11.1.0",
+    "pino-pretty": "^13.0.0",
     "redis": "^4.6.11",
     "socket.io": "^4.7.5",
     "swagger-ui-express": "^5.0.1",

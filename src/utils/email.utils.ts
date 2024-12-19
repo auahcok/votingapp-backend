@@ -1,6 +1,5 @@
 import ejs from 'ejs';
-import fs from 'fs';
-import path from 'node:path';
+import { emailTemplates } from '../../templates/reset-password';
 
 export type EmailTemplates = {
   'reset-password': {
@@ -13,12 +12,7 @@ export const renderTemplate = <T extends keyof EmailTemplates>(
   template: T,
   payload: EmailTemplates[T],
 ): string => {
-  const emailTemplatePath = path.join(
-    process.cwd(),
-    'templates',
-    `${template}.ejs`,
-  );
-  const emailTemplate = fs.readFileSync(emailTemplatePath, 'utf-8');
+  const emailTemplate = emailTemplates[template];
   const compiledTemplate = ejs.compile(emailTemplate);
   return compiledTemplate(payload);
 };

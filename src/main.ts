@@ -15,7 +15,7 @@ import process from 'node:process';
 import path from 'path';
 import config from './config/config.service';
 import { connectDatabase } from './lib/database';
-import logger, { httpLogger } from './lib/logger.service';
+import logger from './lib/logger.service';
 import { useSocketIo } from './lib/realtime.server';
 import redisStore from './lib/session.store';
 import { extractJwt } from './middlewares/extract-jwt-schema.middleware';
@@ -25,6 +25,7 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yaml';
 import { convertDocumentationToYaml } from './openapi/swagger-doc-generator';
 import globalErrorHandler from './utils/globalErrorHandler';
+import httpLogger from './middlewares/http-logger';
 
 const boostrapServer = async () => {
   await connectDatabase();
@@ -83,7 +84,7 @@ const boostrapServer = async () => {
   }
 
   app.use('/api', apiRoutes);
-  
+
   const swaggerDocument = YAML.parse(convertDocumentationToYaml());
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
