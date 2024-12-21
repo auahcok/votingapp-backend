@@ -1,15 +1,5 @@
 import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
-import * as path from 'path';
-import * as fs from 'fs';
-
-// Gunakan path yang lebih aman
-const tmpPath = path.join(process.cwd(), '.hardhat_tmp');
-
-// Pastikan direktori dibuat dengan izin yang benar
-if (!fs.existsSync(tmpPath)) {
-  fs.mkdirSync(tmpPath, { recursive: true, mode: 0o777 });
-}
 
 const config: HardhatUserConfig = {
   solidity: '0.8.27',
@@ -19,12 +9,16 @@ const config: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
       forking: undefined,
     },
+    localhost: {
+      url: 'http://127.0.0.1:8545',
+      chainId: 1337,
+    },
   },
   paths: {
-    artifacts: path.join(tmpPath, 'artifacts'),
-    cache: path.join(tmpPath, 'cache'),
-    sources: path.join(tmpPath, 'contracts'),
-    ignition: path.join(tmpPath, 'ignition'),
+    artifacts: 'tmp/hardhat/artifacts',
+    cache: 'tmp/hardhat/cache',
+    sources: 'tmp/hardhat/contracts',
+    ignition: 'tmp/hardhat/ignition',
   },
   defaultNetwork: 'hardhat',
   typechain: {
@@ -32,9 +26,6 @@ const config: HardhatUserConfig = {
     target: 'ethers-v6',
   },
 };
-
-// Set environment variable untuk direktori global Hardhat
-process.env.HARDHAT_GLOBAL_DIR = tmpPath;
 
 export default config;
 

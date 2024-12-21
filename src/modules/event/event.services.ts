@@ -5,13 +5,234 @@ import { GetActiveEventSchemaType, GetEventsSchemaType } from './event.schema';
 import { ethers } from 'hardhat';
 import { ContractTransactionResponse } from 'ethers';
 import { Voting__factory } from '../../../tmp/hardhat/typechain-types';
+import VotingABI from '../../../tmp/hardhat/artifacts/tmp/hardhat/contracts/Voting.sol/Voting.json';
 
 const prisma = new PrismaClient();
 
 // Konfigurasi Blockchain menggunakan Hardhat
-const provider = new ethers.JsonRpcProvider('http://localhost:8545');
+const provider = new ethers.JsonRpcProvider('http://127.0.0.1:8545');
 const privateKey = process.env.PRIVATE_KEY || '';
 const wallet = new ethers.Wallet(privateKey, provider);
+const contractAddress = process.env.CONTRACT_ADDRESS || ''; // Alamat kontrak voting
+const votingContract = new ethers.Contract(
+  contractAddress,
+  VotingABI.abi,
+  wallet,
+);
+
+// CREATE EVENT with validation
+export const createEvent = async (payload: EventType): Promise<Event> => {
+  if (
+    !payload.title ||
+    !payload.startDate ||
+    !payload.endDate ||
+    !payload.description
+  ) {
+    throw new Error(
+      'Missing required event fields: title, date, and description',
+    );
+  }
+
+  if (!payload.candidates || payload.candidates.length === 0) {
+    throw new Error('At least one candidate is required');
+  }
+
+  // Update existing active event to inactive if isActive is true
+  if (payload.isActive) {
+    await prisma.event.updateMany({
+      where: { isActive: true },
+      data: { isActive: false },
+    });
+  }
+
+  const event = await prisma.event.create({
+    data: {
+      title: payload.title,
+      description: payload.description,
+      isActive: Boolean(payload.isActive),
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+    },
+  });
+
+  await Promise.all(
+    payload.candidates.map((candidate) =>
+      prisma.candidate.create({
+        data: {
+          ...candidate,
+          eventId: event.id,
+        },
+      }),
+    ),
+  );
+
+  return event;
+};
+
+// CREATE VOTE with validation
+export const createVote = async (
+  userId: string,
+  eventId: string,
+  payload: VoteType,
+): Promise<UserVoteEvent> => {
+  // Periksa apakah payload valid
+  if (!eventId || !userId || !payload.candidateId) {
+    throw new Error(
+      'Missing required fields for voting: eventId, userId, and candidateId',
+    );
+  }
+
+  // Periksa apakah event dengan ID tersebut ada
+  const existingEvent = await prisma.event.findUnique({
+    where: {
+      id: eventId,
+    },
+  });
+
+  if (!existingEvent) throw new Error('Event not found');
+
+  // Periksa apakah user dengan ID tersebut ada
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!existingUser) throw new Error('User not found');
+
+  // Periksa apakah candidate dengan ID tersebut ada
+  const existingCandidate = await prisma.candidate.findUnique({
+    where: {
+      id: payload.candidateId,
+    },
+  });
+
+  if (!existingCandidate) throw new Error('Candidate not found');
+
+  const existingVote = await prisma.userVoteEvent.findFirst({
+    where: {
+      eventId: eventId,
+      userId: userId,
+    },
+  });
+
+  if (existingVote) {
+    throw new Error('You have already voted for this event');
+  }
+
+  const votingContract = Voting__factory.connect(
+    process.env.CONTRACT_ADDRESS || '', // Alamat kontrak voting
+    wallet,
+  );
+
+  // Hash data vote untuk mencatat ke blockchain
+  const voteHash = ethers.keccak256(
+    ethers.AbiCoder.defaultAbiCoder().encode(
+      ['string', 'string', 'string'],
+      [userId, eventId, payload.candidateId],
+    ),
+  );
+
+  try {
+    // Panggil kontrak untuk mencatat vote di blockchain
+    const tx: ContractTransactionResponse = await votingContract.castVote(
+      userId,
+      eventId,
+      payload.candidateId,
+    );
+
+    // Tunggu transaksi selesai dan dapatkan receipt
+    const receipt = await tx.wait();
+    console.log(`Vote hash stored on blockchain: ${voteHash}`);
+    console.log(`Transaction hash: ${receipt?.hash}`);
+
+    // Simpan vote ke database setelah transaksi blockchain berhasil
+    const vote = await prisma.userVoteEvent.create({
+      data: {
+        eventId: eventId,
+        candidateId: payload.candidateId,
+        userId: userId,
+        transactionHash: receipt?.hash,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+
+    return vote;
+  } catch (error) {
+    console.error('Error during blockchain transaction:', error);
+    throw new Error('Failed to record vote on blockchain');
+  }
+};
+
+export const checkVoteIsValid = async (
+  userId: string,
+  eventId: string,
+  candidateId: string,
+): Promise<boolean> => {
+  try {
+    const voteHash = ethers.keccak256(
+      ethers.solidityPacked(
+        ['string', 'string', 'string'],
+        [userId, eventId, candidateId],
+      ),
+    );
+
+    // Panggil kontrak untuk memeriksa keberadaan vote
+    const result = await votingContract.isTransactionHashStored(voteHash);
+
+    console.log('Vote exists:', result);
+    return result;
+  } catch (error) {
+    console.error('Error checking vote on blockchain:', error);
+    throw new Error('Failed to check vote on blockchain');
+  }
+};
+
+// DELETE EVENT with validation
+export const deleteEvent = async (eventId: string): Promise<void> => {
+  if (!eventId) throw new Error('Event ID is required');
+
+  try {
+    // Fetch candidates associated with the event
+    const candidates = await prisma.candidate.findMany({
+      where: { eventId },
+      select: { id: true }, // Only fetch candidate IDs
+    });
+
+    if (candidates.length > 0) {
+      const candidateIds = candidates.map((candidate) => candidate.id);
+
+      // Delete UserVotes associated with these candidates
+      await prisma.userVoteEvent.deleteMany({
+        where: { candidateId: { in: candidateIds } },
+      });
+
+      // Delete the candidates themselves
+      await prisma.candidate.deleteMany({
+        where: { id: { in: candidateIds } },
+      });
+    }
+
+    // Delete the event itself
+    await prisma.event.delete({
+      where: {
+        id: eventId,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2025'
+    ) {
+      throw new Error('Event not found or has already been deleted');
+    }
+    if (error instanceof Error) {
+      throw new Error(`Failed to delete event: ${error.message}`);
+    }
+    throw error;
+  }
+};
 
 // GET EVENTS with pagination and search functionality
 export const getAllEvents = async (payload: GetEventsSchemaType) => {
@@ -195,55 +416,6 @@ export const getEventById = async (eventId: string) => {
   };
 };
 
-// CREATE EVENT with validation
-export const createEvent = async (payload: EventType): Promise<Event> => {
-  if (
-    !payload.title ||
-    !payload.startDate ||
-    !payload.endDate ||
-    !payload.description
-  ) {
-    throw new Error(
-      'Missing required event fields: title, date, and description',
-    );
-  }
-
-  if (!payload.candidates || payload.candidates.length === 0) {
-    throw new Error('At least one candidate is required');
-  }
-
-  // Update existing active event to inactive if isActive is true
-  if (payload.isActive) {
-    await prisma.event.updateMany({
-      where: { isActive: true },
-      data: { isActive: false },
-    });
-  }
-
-  const event = await prisma.event.create({
-    data: {
-      title: payload.title,
-      description: payload.description,
-      isActive: Boolean(payload.isActive),
-      startDate: payload.startDate,
-      endDate: payload.endDate,
-    },
-  });
-
-  await Promise.all(
-    payload.candidates.map((candidate) =>
-      prisma.candidate.create({
-        data: {
-          ...candidate,
-          eventId: event.id,
-        },
-      }),
-    ),
-  );
-
-  return event;
-};
-
 // UPDATE EVENT with validation
 export const updateEvent = async (
   eventId: string,
@@ -358,145 +530,4 @@ export const updateEvent = async (
   }
 
   return updatedEvent;
-};
-
-// CREATE VOTE with validation
-export const createVote = async (
-  userId: string,
-  eventId: string,
-  payload: VoteType,
-): Promise<UserVoteEvent> => {
-  // Periksa apakah payload valid
-  if (!eventId || !userId || !payload.candidateId) {
-    throw new Error(
-      'Missing required fields for voting: eventId, userId, and candidateId',
-    );
-  }
-
-  // Periksa apakah event dengan ID tersebut ada
-  const existingEvent = await prisma.event.findUnique({
-    where: {
-      id: eventId,
-    },
-  });
-
-  if (!existingEvent) throw new Error('Event not found');
-
-  // Periksa apakah user dengan ID tersebut ada
-  const existingUser = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  });
-
-  if (!existingUser) throw new Error('User not found');
-
-  // Periksa apakah candidate dengan ID tersebut ada
-  const existingCandidate = await prisma.candidate.findUnique({
-    where: {
-      id: payload.candidateId,
-    },
-  });
-
-  if (!existingCandidate) throw new Error('Candidate not found');
-
-  const existingVote = await prisma.userVoteEvent.findFirst({
-    where: {
-      eventId: eventId,
-      userId: userId,
-    },
-  });
-
-  if (existingVote) {
-    throw new Error('You have already voted for this event');
-  }
-
-  const votingContract = Voting__factory.connect(
-    process.env.CONTRACT_ADDRESS || '', // Alamat kontrak voting
-    wallet,
-  );
-
-  // Hash data vote untuk mencatat ke blockchain
-  const voteHash = ethers.keccak256(
-    ethers.AbiCoder.defaultAbiCoder().encode(
-      ['string', 'string', 'string'],
-      [userId, eventId, payload.candidateId],
-    ),
-  );
-
-  try {
-    // Panggil kontrak untuk mencatat vote di blockchain
-    const tx: ContractTransactionResponse = await votingContract.castVote(
-      userId,
-      eventId,
-      payload.candidateId,
-    );
-
-    // Tunggu transaksi selesai dan dapatkan receipt
-    const receipt = await tx.wait();
-    console.log(`Vote hash stored on blockchain: ${voteHash}`);
-    console.log(`Transaction hash: ${receipt?.hash}`);
-
-    // Simpan vote ke database setelah transaksi blockchain berhasil
-    const vote = await prisma.userVoteEvent.create({
-      data: {
-        eventId: eventId,
-        candidateId: payload.candidateId,
-        userId: userId,
-        transactionHash: receipt?.hash,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    });
-
-    return vote;
-  } catch (error) {
-    console.error('Error during blockchain transaction:', error);
-    throw new Error('Failed to record vote on blockchain');
-  }
-};
-
-// DELETE EVENT with validation
-export const deleteEvent = async (eventId: string): Promise<void> => {
-  if (!eventId) throw new Error('Event ID is required');
-
-  try {
-    // Fetch candidates associated with the event
-    const candidates = await prisma.candidate.findMany({
-      where: { eventId },
-      select: { id: true }, // Only fetch candidate IDs
-    });
-
-    if (candidates.length > 0) {
-      const candidateIds = candidates.map((candidate) => candidate.id);
-
-      // Delete UserVotes associated with these candidates
-      await prisma.userVoteEvent.deleteMany({
-        where: { candidateId: { in: candidateIds } },
-      });
-
-      // Delete the candidates themselves
-      await prisma.candidate.deleteMany({
-        where: { id: { in: candidateIds } },
-      });
-    }
-
-    // Delete the event itself
-    await prisma.event.delete({
-      where: {
-        id: eventId,
-      },
-    });
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2025'
-    ) {
-      throw new Error('Event not found or has already been deleted');
-    }
-    if (error instanceof Error) {
-      throw new Error(`Failed to delete event: ${error.message}`);
-    }
-    throw error;
-  }
 };

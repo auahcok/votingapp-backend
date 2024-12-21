@@ -49,4 +49,16 @@ contract Voting {
     );
     return votes[voteHash];
   }
+
+  // Fungsi untuk memeriksa apakah vote tersimpan di blockchain
+  function isVoteStored(
+    string memory userId,
+    string memory eventId,
+    string memory candidateId
+  ) public view returns (bool) {
+    bytes32 voteHash = keccak256(
+      abi.encodePacked(userId, eventId, candidateId)
+    );
+    return bytes(votes[voteHash].userId).length != 0;
+  }
 }

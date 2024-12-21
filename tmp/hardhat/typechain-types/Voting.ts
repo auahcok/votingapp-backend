@@ -19,39 +19,32 @@ import type {
   TypedContractMethod,
 } from "./common";
 
-export declare namespace Voting {
-  export type VoteStruct = {
-    userId: string;
-    eventId: string;
-    candidateId: string;
-  };
-
-  export type VoteStructOutput = [
-    userId: string,
-    eventId: string,
-    candidateId: string
-  ] & { userId: string; eventId: string; candidateId: string };
-}
-
 export interface VotingInterface extends Interface {
   getFunction(
-    nameOrSignature: "castVote" | "getVote" | "hasVoted" | "votes"
+    nameOrSignature:
+      | "castVote"
+      | "hasVoted"
+      | "isTransactionHashStored"
+      | "votes"
   ): FunctionFragment;
 
   encodeFunctionData(
     functionFragment: "castVote",
     values: [string, string, string]
   ): string;
-  encodeFunctionData(
-    functionFragment: "getVote",
-    values: [string, string, string]
-  ): string;
   encodeFunctionData(functionFragment: "hasVoted", values: [BytesLike]): string;
+  encodeFunctionData(
+    functionFragment: "isTransactionHashStored",
+    values: [BytesLike]
+  ): string;
   encodeFunctionData(functionFragment: "votes", values: [BytesLike]): string;
 
   decodeFunctionResult(functionFragment: "castVote", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "getVote", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasVoted", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "isTransactionHashStored",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "votes", data: BytesLike): Result;
 }
 
@@ -104,13 +97,13 @@ export interface Voting extends BaseContract {
     "nonpayable"
   >;
 
-  getVote: TypedContractMethod<
-    [userId: string, eventId: string, candidateId: string],
-    [Voting.VoteStructOutput],
+  hasVoted: TypedContractMethod<[arg0: BytesLike], [boolean], "view">;
+
+  isTransactionHashStored: TypedContractMethod<
+    [transactionHash: BytesLike],
+    [boolean],
     "view"
   >;
-
-  hasVoted: TypedContractMethod<[arg0: BytesLike], [boolean], "view">;
 
   votes: TypedContractMethod<
     [arg0: BytesLike],
@@ -136,15 +129,11 @@ export interface Voting extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "getVote"
-  ): TypedContractMethod<
-    [userId: string, eventId: string, candidateId: string],
-    [Voting.VoteStructOutput],
-    "view"
-  >;
-  getFunction(
     nameOrSignature: "hasVoted"
   ): TypedContractMethod<[arg0: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "isTransactionHashStored"
+  ): TypedContractMethod<[transactionHash: BytesLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "votes"
   ): TypedContractMethod<
