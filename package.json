@@ -15,6 +15,7 @@
     "migrate:dev": "pnpm dlx prisma migrate dev",
     "migrate:deploy": "pnpm dlx prisma migrate deploy",
     "hh": "npx hardhat node",
+    "hh:deploy": "npx hardhat run src/scripts/deploy.ts --network localhost",
     "hh:typechain": "npx hardhat typechain",
     "hh:compile": "npx hardhat compile",
     "hh:ignite": "npx hardhat ignition deploy tmp/hardhat/ignition/modules/Voting.ts --network localhost",

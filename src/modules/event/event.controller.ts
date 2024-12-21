@@ -4,6 +4,7 @@ import {
   GetEventsSchemaType,
   CreateVoteSchemaType,
   GetActiveEventSchemaType,
+  GetVoteIsValidSchemaType,
 } from './event.schema';
 import {
   createEvent,
@@ -14,6 +15,7 @@ import {
   getUserEvents,
   createVote,
   getActiveEvent,
+  checkVoteIsValid,
 } from './event.services';
 import { errorResponse, successResponse } from '../../utils/api.utils';
 import { StatusCodes } from 'http-status-codes';
@@ -150,6 +152,53 @@ export const handleCreateVote = async (
     return errorResponse(
       res,
       'Unexpected error occurred while creating vote',
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      {},
+    );
+  }
+};
+
+// need userId, eventId, and candidateId
+export const handleCheckVoteIsValid = async (
+  req: Request<unknown, unknown, unknown, GetVoteIsValidSchemaType>,
+  res: Response,
+) => {
+  try {
+    const { userId, eventId, candidateId } = req.query;
+    // console.log({ userId, eventId, candidateId });
+
+    const isValid = await checkVoteIsValid(userId, eventId, candidateId);
+
+    if (!isValid) {
+      return successResponse(
+        res,
+        'Vote is not valid and not saved on blockchain',
+        {valid: false},
+        StatusCodes.OK,
+      );
+    }
+
+    return successResponse(
+      res,
+      'Vote is valid and saved on blockchain',
+      {valid: true},
+      StatusCodes.OK,
+    );
+  } catch (error) {
+    console.error('Error in handleCheckVoteIsValid:', error);
+
+    if (error instanceof Error) {
+      return errorResponse(
+        res,
+        error.message || 'Failed to check vote validity',
+        StatusCodes.BAD_REQUEST,
+        {},
+      );
+    }
+
+    return errorResponse(
+      res,
+      'Unexpected error occurred while checking vote validity',
       StatusCodes.INTERNAL_SERVER_ERROR,
       {},
     );

@@ -9,12 +9,14 @@ import {
   handleGetEvents,
   handleCreateVote,
   handleGetActiveEvent,
+  handleCheckVoteIsValid,
 } from './event.controller';
 import {
   createEventSchema,
   getEventsSchema,
   createVoteSchema,
   getActiveEventSchema,
+  getVoteIsValidSchema,
 } from './event.schema';
 // import { eventSchema } from './event.dto';
 
@@ -38,6 +40,15 @@ eventRouter.get(
     requestType: { query: getActiveEventSchema },
   },
   handleGetActiveEvent,
+);
+
+eventRouter.get(
+  '/check-vote',
+  {
+    requestType: { query: getVoteIsValidSchema },
+  },
+  canAccess(),
+  handleCheckVoteIsValid,
 );
 
 // Rute untuk membuat event baru
@@ -80,6 +91,5 @@ eventRouter.post(
 );
 
 // Route for set Finish event
-
 
 export default eventRouter.getRouter();

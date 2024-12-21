@@ -11,9 +11,12 @@ async function main() {
   const Voting = await ethers.getContractFactory('Voting');
   const voting = await Voting.deploy();
 
-  await voting.deployed();
+  // Tunggu sampai contract deployed
+  await voting.waitForDeployment();
 
-  console.log('Voting contract deployed to:', voting.address);
+  // Get contract address
+  const address = await voting.getAddress();
+  console.log('Voting contract deployed to:', address);
 }
 
 main().catch((error) => {
